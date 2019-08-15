@@ -1,0 +1,10 @@
+[
+  {
+    "if": "business.rate==16000",
+    "then": [
+      "business.rate='16k'",
+      "business.name='lixiang'"
+    ]
+  },
+  "business.finalEnt=append(business.ent,'_',business.rate)"
+]
