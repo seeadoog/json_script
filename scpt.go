@@ -25,6 +25,7 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("add",add)
 	ctx.SetFunc("json_m", jsonMarshal)
 	ctx.SetFunc("delete", deleteFun)
+	ctx.SetFunc("isnil", isNil)
 }
 
 func (ctx *Context)Func(name string,params ...interface{})  {

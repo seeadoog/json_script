@@ -158,6 +158,7 @@ func TestExec(t *testing.T) {
 	vm.Exec("key='name'")
 	vm.Exec("delete(user,key)")
 	vm.Exec("show(user)")
+	vm.Exec("show('nil value:',hal,isnil(user))")
 
 
 }
