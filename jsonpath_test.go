@@ -134,7 +134,7 @@ var s2 = `[
 	//fmt.Println(vm.Get("common"))
 }
 
-func TestCompiled1(t *testing.T) {
+func TestExec(t *testing.T) {
 	vm:=NewVm()
 	//vm.Exec(`printf('%f %f %f %s',1,2,3,append(len(append('hello','world')),'nima'))`)
 	vm.Exec(`user.name='lixiang'`)

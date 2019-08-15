@@ -106,7 +106,7 @@ var isNil Func = func(i ...interface{}) interface{} {
 	}
 	return true
 }
-
+//delete key of a object
 var deleteFun Func = func(i ...interface{}) interface{} {
 	if len(i)>0{
 		if m,ok:=i[0].(map[string]interface{});ok{
