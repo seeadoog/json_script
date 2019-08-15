@@ -81,10 +81,10 @@ func TestParse(t*testing.T){
 `
 var m = map[string]interface{}{}
 json.Unmarshal([]byte(s),&m)
-p,_:= ComplieExp(m)
-fmt.Println(p.(*IfExp).Else[0].(*SetExps).Variable)
-fmt.Println(p.(*IfExp).Else[1].(*SetExps).Variable)
-fmt.Println(p.(*IfExp).Else[2].(*IfExp).Then[0].(*SetExps).Variable)
+//p,_:= ComplieExp(m)
+//fmt.Println(p.(*IfExp).Else[0].(*SetExps).Variable)
+//fmt.Println(p.(*IfExp).Else[1].(*SetExps).Variable)
+//fmt.Println(p.(*IfExp).Else[2].(*IfExp).Then[0].(*SetExps).Variable)
 }
 
 func TestCompile(t *testing.T) {
@@ -110,7 +110,7 @@ var s2 = `[
 ]`
 	var m interface{}
 	json.Unmarshal([]byte(s2),&m)
-	exp,err:=ComplieExp(m)
+	_,err:=ComplieExp(m)
 	if err !=nil{
 		panic(err)
 	}
@@ -118,12 +118,46 @@ var s2 = `[
 		"ent":"sms",
 		"rate":16000,
 	}
-	for i:=0;i<100000;i++{
+	for i:=0;i<10000;i++{
 		vm:=NewVm()
 		vm.Set("business",busi)
-		vm.CompliedExec(exp)
+		ComplieExp(m)
 	}
 
 	fmt.Println(busi)
+	for i:=0;i<1;i++{
+		v2:=NewVm()
+		err=v2.Exec(`name""=5`)
+		fmt.Println("name=",err,v2.Get("name"))
+	}
+
 	//fmt.Println(vm.Get("common"))
+}
+
+func TestCompiled1(t *testing.T) {
+	vm:=NewVm()
+	//vm.Exec(`printf('%f %f %f %s',1,2,3,append(len(append('hello','world')),'nima'))`)
+	vm.Exec(`user.name='lixiang'`)
+	vm.Exec(`user.password='123456'`)
+	vm.Exec(`jsonStr=json_m(user)`)
+	vm.Exec("printf('%s',jsonStr)")
+	vm.Exec("array=split('1,2,3,4,5',',')")
+	vm.Exec("printf('%v',array)")
+	vm.Exec("printf('%s',array[0])")
+
+	vm.Exec("jsonpd=split(jsonStr,',')")
+	fmt.Println(vm.Exec("printf('%s',array[1])"))
+	fmt.Println(vm.Exec("printf('%v',jsonpd)"))
+	fmt.Println(vm.Exec("printf('len of splited array is %d',len(array))"))
+	vm.SetFunc("show", func(i ...interface{}) interface{} {
+		fmt.Println(i...)
+		return ""
+	})
+	vm.Exec("show('exec show function',1,2,3,4,5)")
+	vm.Exec("show(user)")
+	vm.Exec("key='name'")
+	vm.Exec("delete(user,key)")
+	vm.Exec("show(user)")
+
+
 }

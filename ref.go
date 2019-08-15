@@ -324,7 +324,7 @@ func SwitchJson(exps []SwitchExp, dst interface{}, data interface{}) error {
 //	return tokens, nil
 //}
 //check that if rule is a valid rule
-var ruleRegexp= regexp.MustCompile(`\$(\[\d+\])?(\.\w+(\[\d+\])?)*$`)
+var ruleRegexp= regexp.MustCompile(`\w+(\[\d+\])?(\.\w+(\[\d+\])?)*$`)
 func checkRule(rule string) bool {
 	return ruleRegexp.MatchString(rule)
 }

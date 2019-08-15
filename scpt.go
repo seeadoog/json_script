@@ -1,9 +1,11 @@
 package jsonscpt
 
-import "errors"
+import (
+	"errors"
+)
 
 type Context struct {
-	table map[string]interface{}
+	table map[string]interface{}  // save all variables
 }
 
 func NewVm() *Context {
@@ -18,6 +20,11 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("append",apd)
 	ctx.SetFunc("len",lens)
 	ctx.SetFunc("split",split)
+	ctx.SetFunc("printf",printf)
+	ctx.SetFunc("sprintf",sprintf)
+	ctx.SetFunc("add",add)
+	ctx.SetFunc("json_m", jsonMarshal)
+	ctx.SetFunc("delete", deleteFun)
 }
 
 func (ctx *Context)Func(name string,params ...interface{})  {
@@ -36,6 +43,15 @@ func (ctx *Context)Get(k string)interface{}  {
 	v,_:=CachedJsonpathLookUp(ctx.table,k)
 	return v
 }
+
+func (ctx *Context)Exec(v interface{}) error {
+	cpd,err:=ComplieExp(v)
+	if err !=nil{
+		return err
+	}
+	return ctx.CompliedExec(cpd)
+}
+
 func (ctx *Context)CompliedExec(v interface{})error {
 	switch v.(type) {
 	case *IfExp:
@@ -54,6 +70,7 @@ func (ctx *Context)CompliedExec(v interface{})error {
 	case *SetExps:
 		setexp:=v.(*SetExps)
 		err:=setexp.Exec(ctx)
+		//fmt.Println(setexp.Variable,setexp.Value.Get(ctx))
 		if err !=nil{
 			return err
 		}
@@ -79,8 +96,8 @@ func boolValid(s string) bool {
 
 type IfExp struct {
 	If *BoolExp
-	Then []interface{}
-	Else []interface{}
+	Then interface{}
+	Else interface{}
 }
 
 
@@ -88,6 +105,7 @@ type IfExp struct {
 func ComplieExp(v interface{}) (interface{},error) {
 	if exp,ok:=v.(string);ok{
 		e,err:=parseSetExp(exp)
+		//fmt.Println("-----------------")
 		if err !=nil{
 			return nil, err
 		}
@@ -103,19 +121,19 @@ func ComplieExp(v interface{}) (interface{},error) {
 				return nil,err
 			}
 		}
-		if then,ok:=m["then"].([]interface{});ok {
+		if then,ok:=m["then"];ok && then !=nil {
 			var parsedExp,err = ComplieExp(then)
 			if err !=nil{
 				return nil,err
 			}
-			exp.Then = parsedExp.([]interface{})
+			exp.Then = parsedExp
 		}
-		if el,ok:=m["else"].([]interface{});ok {
+		if el,ok:=m["else"];ok && el !=nil{
 			var parsedExp,err = ComplieExp(el)
 			if err !=nil{
 				return nil,err
 			}
-			exp.Else = parsedExp.([]interface{})
+			exp.Else = parsedExp
 		}
 		return exp,nil
 	}

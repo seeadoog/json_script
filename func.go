@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"fmt"
 	"strings"
+	"encoding/json"
 )
 
 type Func func(...interface{})interface{}
-
+//get len of string
 var lens Func = func(i ...interface{}) interface{} {
 	if len(i)==0{
 		return 0
@@ -19,11 +20,16 @@ var lens Func = func(i ...interface{}) interface{} {
 		return len(v.(string))
 	case map[string]interface{}:
 		return len(v.(map[string]interface{}))
+	case []interface{}:
+		return len(v.([]interface{}))
+	case []string:
+		return len(v.([]string))
+
 	default:
 		return 0
 	}
 }
-
+// append string and number
 var apd Func = func(i ...interface{}) interface{} {
 	var bf bytes.Buffer
 	for _, v := range i {
@@ -32,7 +38,7 @@ var apd Func = func(i ...interface{}) interface{} {
 	return bf.String()
 }
 
-
+// split str
 var split Func = func(i ...interface{}) interface{} {
 	if len(i)>=2{
 		if s,ok:=i[0].(string);ok{
@@ -43,6 +49,70 @@ var split Func = func(i ...interface{}) interface{} {
 					}
 				}else{
 					return strings.Split(s,sp)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+var add Func = func(i ...interface{}) interface{} {
+	var sum  float64 = 0
+	for _, v := range i {
+		if fl,ok:=v.(float64);ok{
+			sum+=fl
+		}
+	}
+	return sum
+}
+
+var printf Func = func(i ...interface{}) interface{} {
+	if len(i)>0{
+		if format,ok:=i[0].(string);ok{
+			fmt.Printf(format+"\n",i[1:]...)
+		}
+	}
+	return nil
+}
+
+var sprintf Func = func(i ...interface{}) interface{} {
+	if len(i)>0{
+		if format,ok:=i[0].(string);ok{
+			return fmt.Sprintf(format,i[1:]...)
+		}
+	}
+	return ""
+}
+//to json string
+var jsonMarshal Func = func(i ...interface{}) interface{} {
+	if len(i)>0{
+		b,err:=json.Marshal(i[0])
+		if err !=nil{
+			return "{}"
+		}
+		return toString(b)
+
+	}
+	return ""
+}
+//test if value is nil
+var isNil Func = func(i ...interface{}) interface{} {
+	if len(i)>0{
+		if i[0]==nil{
+			return true
+		}else{
+			return false
+		}
+	}
+	return true
+}
+
+var deleteFun Func = func(i ...interface{}) interface{} {
+	if len(i)>0{
+		if m,ok:=i[0].(map[string]interface{});ok{
+			for j:=1;j< len(i);j++{
+				if k,ok:=i[j].(string);ok{
+					delete(m,k)
 				}
 			}
 		}

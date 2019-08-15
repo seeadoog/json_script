@@ -13,7 +13,18 @@ type Exp interface  {
 func parseSetExp(s string)(*SetExps, error){
 	v:=strings.Split(s,"=")
 	if len(v)!=2{
+		if len(v)==1{
+			val,err:=parseValue(v[0])
+			if err !=nil{
+				return nil,err
+			}
+			return &SetExps{Variable:"_",Value:val},nil
+		}
 		return nil,errors.New("invalid set exp:"+s)
+	}
+
+	if !checkRule(v[0]){
+		return nil,errors.New("invalid setexp key:"+v[0])
 	}
 	val,err:=parseValue(v[1])
 	if err !=nil{

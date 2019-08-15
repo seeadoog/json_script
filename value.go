@@ -49,6 +49,7 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 //
 var funv = regexp.MustCompile(`(\w+)\((.+)\)$`)
 func parseValue(s string) (Value,error) {
+	s = strings.Trim(s," ")
 	if strings.HasPrefix(s, "'") && strings.HasSuffix(s, "'") {
 	 	v:=&ConstValue{
 	 		v:strings.Trim(s,"'"),
@@ -58,6 +59,10 @@ func parseValue(s string) (Value,error) {
 	if iv,err:= strconv.ParseFloat(s,64);err ==nil{
 		//fmt.Println("d")
 		return &ConstValue{iv}  ,nil
+	}
+
+	if s=="nil"{
+		return &ConstValue{nil},nil
 	}
 	//set from function
 	if funv.MatchString(s){
@@ -119,6 +124,10 @@ func parseValue(s string) (Value,error) {
 			}
 			return &FuncValue{FuncName:key,params:parsedValues},nil
 		}
+	}
+
+	if !checkRule(s){
+		return nil,errors.New("invalid variable key:"+s)
 	}
 	return &VarValue{Key:s},nil
 //	return nil, nil
