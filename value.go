@@ -1,17 +1,17 @@
 package jsonscpt
 
 import (
-	"strings"
-	"strconv"
-	"regexp"
 	"errors"
-	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 // const value
 
 type Value interface {
 	Get(ctx *Context) interface{}
+	//GetName()string
 }
 type ConstValue struct {
 	v interface{}
@@ -20,7 +20,9 @@ type ConstValue struct {
 func (v *ConstValue) Get(ctx *Context) interface{} {
 	return v.v
 }
-
+//func (v *ConstValue)GetName()string  {
+//	return ""
+//}
 //this is variable ,the value from context
 type VarValue struct {
 	Key string
@@ -30,6 +32,10 @@ func (v *VarValue) Get(ctx *Context) interface{} {
 	o, _ := CachedJsonpathLookUp(ctx.table, v.Key)
 	return o
 }
+
+//func (v *VarValue)GetName()string  {
+//	return v.Key
+//}
 
 // value of function
 type FuncValue struct {
@@ -47,6 +53,9 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 	}
 	return nil
 }
+//func (v *FuncValue)GetName()string  {
+//	return v.FuncName
+//}
 //
 var funv = regexp.MustCompile(`(\w+)\((.+)\)$`)
 func parseValue(s string) (Value,error) {
@@ -160,85 +169,85 @@ func parseValue(s string) (Value,error) {
 //	return nil, nil
 }
 
-func parseBoolV(s string) (Value,error) {
-	s = strings.Trim(s," ")
-	bl:=0 //括号匹配
-	eof:=0
-	token :=make([]byte, 0,len(s))
-	vals:=[]string{}
-	//fmt.Println("-----------",s)
-	for i:=0;i< len(s);i++{
-		v:=s[i]
-		token = append(token,v)
-		if v=='('{
-			bl++
-			continue
-		}
-		if v==')'{
-			if bl==0{
-				return nil,errors.New("invalid bool exp==>"+s)
-			}
-			bl--
-			continue
-		}
-		if bl==0{
-			if (v=='&' || v=='>' || v=='<' || v=='='){
-				//op = append(op,v)
-				if eof ==0{
-					if len(token)==0{
-						return nil,errors.New("nivalid bool exp,start with eof:"+s)
-					}
-					vals = append(vals,string(token[0:len(token)-1]))
-					token = token[len(token)-1:]
-					eof = 1
-				}
-			}else{
-				if eof == 1{
-					eof = 0
-					if len(token)==0{
-						return nil,errors.New("invalid bool exp,start with eof:"+s)
-					}
-					vals = append(vals,string(token[0:len(token)-1]))
-					token = token[len(token)-1:]
-					//终结符扫描完成
-				}
-			}
-		}
-	}
-
-	//括号不匹配
-	if bl !=0{
-		return nil,errors.New("invald bool exp,need ')':"+s)
-	}
-
-	if len(token)>0{
-		vals = append(vals,string(token))
-	}
-
-	if len(vals)>3{
-		return nil,errors.New("invalid bool exp:too many sub exp:"+s)
-	}
-	if len(vals) == 3{
-		op:=parseOp(vals[1])
-		if op==nil{
-			return nil,errors.New("invalid bool op:"+vals[1])
-		}
-		x,err:=parseValue(vals[0])
-		if err !=nil{
-			return nil,err
-		}
-		y,err:=parseValue(vals[2])
-		if err !=nil{
-			return nil,err
-		}
-		return &BoolValue{X:x,Y:y,Op:op},nil
-	}
-	if len(vals) == 1{
-		return parseValue(vals[0])
-	}
-	fmt.Println(vals)
-	return nil,errors.New("invalid bool exp,"+s)
-}
+//func parseBoolV(s string) (Value,error) {
+//	s = strings.Trim(s," ")
+//	bl:=0 //括号匹配
+//	eof:=0
+//	token :=make([]byte, 0,len(s))
+//	vals:=[]string{}
+//	//fmt.Println("-----------",s)
+//	for i:=0;i< len(s);i++{
+//		v:=s[i]
+//		token = append(token,v)
+//		if v=='('{
+//			bl++
+//			continue
+//		}
+//		if v==')'{
+//			if bl==0{
+//				return nil,errors.New("invalid bool exp==>"+s)
+//			}
+//			bl--
+//			continue
+//		}
+//		if bl==0{
+//			if (v=='&' || v=='>' || v=='<' || v=='='){
+//				//op = append(op,v)
+//				if eof ==0{
+//					if len(token)==0{
+//						return nil,errors.New("nivalid bool exp,start with eof:"+s)
+//					}
+//					vals = append(vals,string(token[0:len(token)-1]))
+//					token = token[len(token)-1:]
+//					eof = 1
+//				}
+//			}else{
+//				if eof == 1{
+//					eof = 0
+//					if len(token)==0{
+//						return nil,errors.New("invalid bool exp,start with eof:"+s)
+//					}
+//					vals = append(vals,string(token[0:len(token)-1]))
+//					token = token[len(token)-1:]
+//					//终结符扫描完成
+//				}
+//			}
+//		}
+//	}
+//
+//	//括号不匹配
+//	if bl !=0{
+//		return nil,errors.New("invald bool exp,need ')':"+s)
+//	}
+//
+//	if len(token)>0{
+//		vals = append(vals,string(token))
+//	}
+//
+//	if len(vals)>3{
+//		return nil,errors.New("invalid bool exp:too many sub exp:"+s)
+//	}
+//	if len(vals) == 3{
+//		op:=parseOp(vals[1])
+//		if op==nil{
+//			return nil,errors.New("invalid bool op:"+vals[1])
+//		}
+//		x,err:=parseValue(vals[0])
+//		if err !=nil{
+//			return nil,err
+//		}
+//		y,err:=parseValue(vals[2])
+//		if err !=nil{
+//			return nil,err
+//		}
+//		return &BoolValue{X:x,Y:y,Op:op},nil
+//	}
+//	if len(vals) == 1{
+//		return parseValue(vals[0])
+//	}
+//	fmt.Println(vals)
+//	return nil,errors.New("invalid bool exp,"+s)
+//}
 
 func TrimBlock(s string)string{
 	si:=0

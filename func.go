@@ -158,21 +158,21 @@ var gt Func = func(i ...interface{}) interface{} {
 	}
 return false
 }
-
+// >=
 var ge Func = func(i ...interface{}) interface{} {
 	if len(i)>=2{
 		return number(i[0])>=number(i[1])
 	}
 	return false
 }
-
+// <
 var lt Func = func(i ...interface{}) interface{} {
 	if len(i)>=2{
 		return number(i[0])<number(i[1])
 	}
 	return false
 }
-
+//<=
 var le Func = func(i ...interface{}) interface{} {
 	if len(i)>=2{
 		return number(i[0])<=number(i[1])

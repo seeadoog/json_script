@@ -122,6 +122,8 @@ func (b *BoolValue)Get(ctx *Context)interface{}  {
 	return b.Op.Equal(b.X,b.Y,ctx)
 }
 
+
+
 //a==b
 // a==b
 type EqualOp struct {

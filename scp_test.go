@@ -164,152 +164,21 @@ func TestExec(t *testing.T) {
 
 }
 
-func TestTrim(t *testing.T) {
-	//fmt.Println(trimBlock("(a=b)(c==d)"))
-	//fmt.Println(trimBlock("(()())"))
-	fmt.Println(TrimBlock("((a=b)(c==d))"))
-	fmt.Println(TrimBlock("(a==b)"))
-}
-
-
 //== >= <= | && | ||
-func TestCompiled_String(t *testing.T) {
-	b:=[]byte(`name=='lixiang'`)
-	//b=[]byte(`((3==3)&& (2==2)) && (3==3)`)
-	//b=[]byte(`isnil(name,age)`)
-	_,err:=parseBoolV(string(b))
-	if err !=nil{
-		panic(err)
-	}
-	vm:=NewVm()
-	vm.Exec("name='lixiang1'")
-	var v interface{}
-	err=json.Unmarshal([]byte(`[{
-	"if":"name=='lixiang'",
-	"then":"printf('%s',name)",
-	"else":"printf('%s','nima')"
-}]`),&v)
-	fmt.Println(vm.Exec(v),err)
-	vm.Exec("printf('%f',1)")
 
-	//fmt.Println(v.Get(vm))
-	//for _, v := range r {
-	//	for k, vv := range v {
-	//		fmt.Println(k,string(vv))
-	//	}
-	//}
-}
 
-func TestJsonPathLookup(t *testing.T) {
-	vm:=NewVm()
-	vm.Set("common.app_id","123456")
-	vm.Set("common.uid","123456")
-//	vm.Set("business.eos","123456")
-	vm.Set("data.text","123456")
-	fmt.Println(vm.Exec(`a=b`))
-	fmt.Println(vm.Get("common.app_id"))
-	err:=vm.ExecJson([]byte(`
-[
-  {
-    "if": "or(and(eq(common.app_id,'1234561'),eq(2,2)),eq(2,2))",
-    "then": [
-      {
-        "if": "eq(common.app_id,'123456')",
-        "then": "printf('%s is niubi',common.app_id)",
-        "else": "printf('invalid uid')"
-      },
-      {
-        "if":"isnil(business.eos)",
-        "then":"business.eos=12000"
 
-      }
-    ],
-    "else": "printf('invalid appid')"
-  },
-  "business.datelen=len(data.text)",
-  "len1=5",
-  {
-	"if":"true",
-	"then":"printf('true is true')"
-  }
-]
-`))
-	fmt.Println(err)
-	fmt.Println(vm.Get("business"))
-}
 
-func TestCompiled_Lookup(t *testing.T) {
-	vm:=NewVm()
-	err:=vm.ExecJson([]byte(`
-[
-  	"a='hello'",
-	{
-		"if":"a=='hello'",
-  		"then":"b='is bello'",
-		"else":"b='is not hello'"
-	},
-	"bi.r=b",
-	"bi.len=len(b)",
-	"bi.len23=len('123')"
-]
-
-`))
-	fmt.Println(err)
-	fmt.Println(vm.Get("a"))
-	fmt.Println(vm.Get("b"))
-	fmt.Println(vm.Get("bi"))
-}
-
-func TestBoolExp_Match(t *testing.T) {
-	vm:=NewVm()
-	vm.Exec("printf('%v',eq(2,2))")
-	b:=[]byte(`
-[
-  "param.name='lixiang'",
-  "$.age=1",
-  {
-    "if":"gt($.age,10)",
-    "then":"printf('%s is an old man',user.name)",
-    "else":[
-      "printf('%s is an child',user.name)",
-      "user.isold=false"
-    ]
-  },
-  "printf('%v',$)"
-]
-`)
-	var i interface{}
-	err:=json.Unmarshal(b,&i)
-	if err !=nil{
-		panic(err)
-	}
-	var cd interface{}
-	for j:=0;j<1;j++{
-		cd,err =ComplieExp(i)
-		if err !=nil{
-			panic(err)
-		}
-	}
-
-	for i:=0;i<1;i++{
-		err:=vm.CompliedExec(cd)
-		if err !=nil{
-			panic(err)
-		}
-	}
-
-	fmt.Println(err)
-}
-
-func TestEqualOp_Equal(t *testing.T) {
+func TestScript(t *testing.T) {
 	vm:=NewVm()
 	var param = map[string]interface{}{
 		"channel":"ens",
 		"language":"en_us",
 		"domain":"iat",
-		//"sample_rate":"16000",
+		"sample_rate":"16000",
 		"appid":"123456",
 	}
+
 	vm.Set("param",param)
 	b:=[]byte(`
 [
@@ -323,7 +192,7 @@ func TestEqualOp_Equal(t *testing.T) {
   },
   {
     "if": "not(param.sample_rate)",
-    "then": "return(10137,'param sample_rate is required')"
+    "then": "return(10137,'param sample_rate is required a valid value is between [16000,16k,8000,8k]')"
   },
   {
     "if": "or(not(param.language),not(param.domain),not(param.sample_rate))",
@@ -351,13 +220,13 @@ func TestEqualOp_Equal(t *testing.T) {
 
 	var i interface{}
 	json.Unmarshal(b,&i)
-	r,err:=ComplieExp(i)
+	compiledCode,err:=ComplieExp(i)
 	if err !=nil{
 		panic(err)
 	}
-	for j:=0;j<1;j++{
+	for j:=0;j<100000;j++{
 		//ComplieExp(i)
-		err = vm.CompliedExec(r)
+		err = vm.CompliedExec(compiledCode)
 	}
 	fmt.Println(err)
 	fmt.Println(param)
