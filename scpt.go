@@ -5,7 +5,35 @@ import (
 	"fmt"
 	"encoding/json"
 )
+var (
+	systemId = map[string]int{
+		"append":1,
+		"len":1,
+		"split":1,
+		"printf":1,
+		"sprintf":1,
+		"add":1,
+		"json_m":1,
+		"isnil":1,
+		"delete":1,
+		"and":1,
+		"eq":1,
+		"or":1,
+		"true":1,
+		"false":1,
+		"gt":1,
+		"ge":1,
+		"lt":1,
+		"le":1,
+	}
+)
 
+func isSystemId(s string)bool  {
+	if systemId[s]==1{
+		return true
+	}
+	return false
+}
 type Context struct {
 	table map[string]interface{}  // save all variables
 }
@@ -18,6 +46,7 @@ func NewVm() *Context {
 	return c
 }
 
+
 func (ctx *Context)init()  {
 	ctx.SetFunc("append",apd)
 	ctx.SetFunc("len",lens)
@@ -29,8 +58,13 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("delete", deleteFun)
 	ctx.SetFunc("isnil", isNil)
 	ctx.SetFunc("and", and)
-	ctx.SetFunc("eq", eq)
 	ctx.SetFunc("or", or)
+	ctx.SetFunc("eq", eq)
+	ctx.SetFunc("gt", gt)
+	ctx.SetFunc("ge", ge)
+	ctx.SetFunc("le", le)
+	ctx.SetFunc("lt", lt)
+
 }
 
 func (ctx *Context)Func(name string,params ...interface{})  {
@@ -125,7 +159,6 @@ type IfExp struct {
 func ComplieExp(v interface{}) (interface{},error) {
 	if exp,ok:=v.(string);ok{
 		e,err:=parseSetExp(exp)
-		//fmt.Println("-----------------")
 		if err !=nil{
 			return nil, err
 		}

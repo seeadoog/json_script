@@ -204,29 +204,34 @@ func TestJsonPathLookup(t *testing.T) {
 	vm:=NewVm()
 	vm.Set("common.app_id","100IME")
 	vm.Set("common.uid","123456")
-	vm.Set("business.eos","123456")
+//	vm.Set("business.eos","123456")
 	vm.Set("data.text","123456")
 	fmt.Println(vm.Exec(`a=b`))
 	fmt.Println(vm.Get("common.app_id"))
 	err:=vm.ExecJson([]byte(`
 [
   {
-    "if": "and(eq(common.app_id,'100IME'),eq(2,2))",
+    "if": "or(and(eq(common.app_id,'100IME1'),eq(2,2)),eq(2,2))",
     "then": [
       {
-        "if": "common.uid=='123456'",
+        "if": "eq(common.app_id,'100IME')",
         "then": "printf('%s is niubi',common.app_id)",
         "else": "printf('invalid uid')"
       },
       {
-        "if":"business.eos==nil",
+        "if":"isnil(business.eos)",
         "then":"business.eos=12000"
 
       }
     ],
     "else": "printf('invalid appid')"
   },
-	"business.datelen=len(data.text)"
+  "business.datelen=len(data.text)",
+  "len1=5",
+  {
+	"if":"true",
+	"then":"printf('true is true')"
+  }
 ]
 `))
 	fmt.Println(err)
@@ -253,4 +258,45 @@ func TestCompiled_Lookup(t *testing.T) {
 	fmt.Println(vm.Get("a"))
 	fmt.Println(vm.Get("b"))
 	fmt.Println(vm.Get("bi"))
+}
+
+func TestBoolExp_Match(t *testing.T) {
+	vm:=NewVm()
+	vm.Exec("printf('%v',eq(2,2))")
+	b:=[]byte(`
+[
+  "user.name='lixiang'",
+  "user.age=1",
+  {
+    "if":"gt(user.age,10)",
+    "then":"show('%s is an old man',user.name)",
+    "else":[
+      "show('%s is an child',user.name)",
+      "user.isold=false"
+    ]
+  },
+  "show('%v',user)"
+]
+`)
+	var i interface{}
+	err:=json.Unmarshal(b,&i)
+	if err !=nil{
+		panic(err)
+	}
+	var cd interface{}
+	for j:=0;j<1;j++{
+		cd,err =ComplieExp(i)
+		if err !=nil{
+			panic(err)
+		}
+	}
+
+	for i:=0;i<100000;i++{
+		err:=vm.CompliedExec(cd)
+		if err !=nil{
+			panic(err)
+		}
+	}
+
+	fmt.Println(err)
 }

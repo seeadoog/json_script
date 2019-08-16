@@ -27,6 +27,9 @@ func parseSetExp(s string)(*SetExps, error){
 	if !checkRule(v[0]){
 		return nil,errors.New("invalid setexp key:"+v[0])
 	}
+	if isSystemId(v[0]){
+		return nil,errors.New("system identify can not be variable:"+s)
+	}
 	val,err:=parseValue(v[1])
 	if err !=nil{
 		return nil,err
@@ -64,7 +67,7 @@ func (b *BoolExp)Match(ctx *Context)bool  {
 }
 
 func parseBoolExp( s string)(*BoolExp  ,error){
-	v,err:=parseBoolV(s)
+	v,err:=parseValue(s)
 	if err !=nil{
 		return nil,err
 	}

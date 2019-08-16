@@ -69,16 +69,25 @@ func parseValue(s string) (Value,error) {
 	if s=="nil"{
 		return &ConstValue{nil},nil
 	}
-	//set from function
-	if boooreg.Match([]byte(s)){
-		//r:=boooreg.FindAllSubmatch([]byte(s),-1)
-		//fmt.Println(len(r))
-		bv,err:=parseBoolV(s)
-		if err !=nil{
-			//goto other
-		}
-		return bv,nil
+
+	if s=="true"{
+		return &ConstValue{true},nil
 	}
+
+	if s=="false"{
+		return &ConstValue{false},nil
+	}
+
+	//set from function
+	//if boooreg.Match([]byte(s)){
+	//	//r:=boooreg.FindAllSubmatch([]byte(s),-1)
+	//	//fmt.Println(len(r))
+	//	bv,err:=parseBoolV(s)
+	//	if err !=nil{
+	//		//goto other
+	//	}
+	//	return bv,nil
+	//}
 //other:
 	//value from functon
 	if funv.MatchString(s){
@@ -145,6 +154,8 @@ func parseValue(s string) (Value,error) {
 	if !checkRule(s){
 		return nil,errors.New("invalid variable key:"+s)
 	}
+	//fmt.Println(s)
+
 	return &VarValue{Key:s},nil
 //	return nil, nil
 }

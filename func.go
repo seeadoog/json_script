@@ -148,10 +148,44 @@ var eq Func = func(i ...interface{}) interface{} {
 }
 // >
 var gt Func = func(i ...interface{}) interface{} {
-	if len(i)<2{
-		return false
+	if len(i)>=2{
+		return number(i[0])>number(i[1])
 	}
+return false
+}
 
+var ge Func = func(i ...interface{}) interface{} {
+	if len(i)>=2{
+		return number(i[0])>=number(i[1])
+	}
+	return false
+}
+
+var lt Func = func(i ...interface{}) interface{} {
+	if len(i)>=2{
+		return number(i[0])<number(i[1])
+	}
+	return false
+}
+
+var le Func = func(i ...interface{}) interface{} {
+	if len(i)>=2{
+		return number(i[0])<=number(i[1])
+	}
+	return false
+}
+func number(i interface{})  float64{
+	switch i.(type) {
+	case float64:
+		return i.(float64)
+	case int:
+		return float64(i.(int))
+	case int32:
+		return float64(i.(int32))
+	case int64:
+		return float64(i.(int64))
+	}
+	return 0
 }
 
 func ConvertToString(v interface{}) string {

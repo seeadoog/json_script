@@ -1,18 +1,13 @@
 [
+  "user.name='lixiang'",
+  "user.age=1",
   {
-    "if": "common.app_id=='100IME'",
-    "then": [
-      {
-        "if": "common.uid=='123456'",
-        "then": "printf('%s is niubi',common.app_id)",
-        "else": "printf('invalid uid')"
-      },
-      {
-        "if":"business.eos==nil",
-        "then":"business.eos=12000"
-      }
-    ],
-    "else": "printf('invalid appid')"
+    "if":"gt(user.age,10)",
+    "then":"printf('%s is an old man',user.name)",
+    "else":[
+      "printf('%s is an child',user.name)",
+      "user.isold=false"
+    ]
   },
-  "business.datalen=len(data.text)"
+  "printf('%v',user)"
 ]
