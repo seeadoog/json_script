@@ -57,7 +57,7 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 //	return v.FuncName
 //}
 //
-var funv = regexp.MustCompile(`(\w+)\((.+)\)$`)
+var funv = regexp.MustCompile(`(\w+)\((.+)*\)$`)
 func parseValue(s string) (Value,error) {
 	s = strings.Trim(s," ")
 	if !isLegalBlock(s){

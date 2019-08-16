@@ -182,6 +182,7 @@ func TestScript(t *testing.T) {
 	vm.Set("param",param)
 	b:=[]byte(`
 [
+	
   {
     "if": "not(param.language)",
     "then": "return(10137,'param language is required')"
