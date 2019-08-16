@@ -179,6 +179,16 @@ var le Func = func(i ...interface{}) interface{} {
 	}
 	return false
 }
+//return
+var ret Func = func(i ...interface{}) interface{} {
+	if len(i)>=2{
+		return &ErrorReturn{Code:int(number(i[0])),Message:ConvertToString(i[1])}
+	}
+	if len(i)>=1{
+		return &ErrorReturn{Code:int(number(i[0]))}
+	}
+	return &ErrorReturn{}
+}
 func number(i interface{})  float64{
 	switch i.(type) {
 	case float64:

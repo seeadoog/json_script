@@ -303,18 +303,33 @@ func TestBoolExp_Match(t *testing.T) {
 
 func TestEqualOp_Equal(t *testing.T) {
 	vm:=NewVm()
-	vm.Set("param",map[string]interface{}{
+	var param = map[string]interface{}{
 		"channel":"ens",
 		"language":"en_us",
 		"domain":"iat",
-		"sample_rate":"16000",
+		//"sample_rate":"16000",
 		"appid":"123456",
-	})
+	}
+	vm.Set("param",param)
 	b:=[]byte(`
 [
   {
+    "if": "not(param.language)",
+    "then": "return(10137,'param language is required')"
+  },
+  {
+    "if": "not(param.domain)",
+    "then": "return(10137,'param domain is required')"
+  },
+  {
+    "if": "not(param.sample_rate)",
+    "then": "return(10137,'param sample_rate is required')"
+  },
+  {
     "if": "or(not(param.language),not(param.domain),not(param.sample_rate))",
-    "then": "param.ent='error'",
+    "then": [
+      "return(10137,'param convert error')"
+    ],
     "else": [
       {
         "if": "and(eq(param.language,'en_us'),or(eq(param.sample_rate,'16000'),eq(param.sample_rate,'16k')))",
@@ -323,12 +338,12 @@ func TestEqualOp_Equal(t *testing.T) {
     ]
   },
   {
-    "if":"and(not(param.dwa),eq(param.appid,'123456'))",
-    "then":"param.dwa='wpgs'",
-    "else":"param.dwa=''"
-  }
-]
-`)
+    "if": "and(not(param.dwa),eq(param.appid,'123456'))",
+    "then": "param.dwa='wpgs'",
+    "else": "param.dwa=''"
+  },
+  "param.cc=5"
+]`)
 	var err error
 	for j:=0;j<0;j++{
 		err=vm.ExecJson(b)
@@ -340,11 +355,11 @@ func TestEqualOp_Equal(t *testing.T) {
 	if err !=nil{
 		panic(err)
 	}
-	for j:=0;j<10000;j++{
-		ComplieExp(i)
+	for j:=0;j<1;j++{
+		//ComplieExp(i)
+		err = vm.CompliedExec(r)
 	}
-	vm.CompliedExec(r)
 	fmt.Println(err)
-	fmt.Println(vm.Get("param"))
+	fmt.Println(param)
 	fmt.Println(vm.Get("tmp"))
 }

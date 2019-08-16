@@ -26,6 +26,7 @@ var (
 		"lt":1,
 		"le":1,
 		"not":1,
+		"return":1,
 	}
 )
 
@@ -66,6 +67,7 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("le", le)
 	ctx.SetFunc("lt", lt)
 	ctx.SetFunc("not", not)
+	ctx.SetFunc("return", ret)
 
 }
 

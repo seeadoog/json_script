@@ -48,6 +48,14 @@ type SetExps struct{
 }
 
 func (e *SetExps)Exec(ctx *Context)error{
+	if fv,ok:=e.Value.(*FuncValue);ok{
+		if fv.FuncName=="return"{
+			err:=e.Value.Get(ctx)
+			if re,ok:=err.(*ErrorReturn);ok{
+				return re
+			}
+		}
+	}
 	return MarshalInterface(e.Variable,ctx.table,e.Value.Get(ctx))
 }
 //a>b && (c>d)

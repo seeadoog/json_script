@@ -150,18 +150,29 @@ func parserToken(tks []string, cp, value interface{}) error {
 		if idx == TYPE_KEY {
 			cpm, ok := cp.(map[string]interface{})
 			if !ok {
-				return errors.New(fmt.Sprintf("create field failed ,%s->parent cannot convert_ to map", field))
+				cpms,ok:=cp.(map[string]string)
+				if !ok{
+					return errors.New(fmt.Sprintf("create field failed ,%s cannot convert_ to map", field))
+				}
+				//return errors.New(fmt.Sprintf("create field failed ,%s->parent cannot convert_ to map", field))
+				cpms[field] = ConvertToString(value)
+				return nil
 			}
 
 			if k < len(tks)-1 {
 				if cpm[field] == nil {
 					cpm[field] = map[string]interface{}{}
 				}
-				cpm, ok = cpm[field].(map[string]interface{})
+				cpm2, ok := cpm[field].(map[string]interface{})
 				if !ok {
-					return errors.New(fmt.Sprintf("create field failed ,%s cannot convert_ to map", field))
+					cpms,ok:=cpm[field].(map[string]string)
+					if !ok{
+						return errors.New(fmt.Sprintf("create field failed ,%s cannot convert_ to map", field))
+					}
+					cp = cpms
+				}else{
+					cp = cpm2
 				}
-				cp = cpm
 			} else {
 				//filed is last token ,set value to interface
 				cpm[field] = value
