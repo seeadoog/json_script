@@ -60,12 +60,29 @@ type BoolExp struct {
 
 
 func (b *BoolExp)Match(ctx *Context)bool  {
-	if v,ok:=b.Value.Get(ctx).(bool);ok && v{
-		return true
+	return convertToBool(b.Value.Get(ctx))
+}
+
+func convertToBool(v interface{})bool  {
+	switch v.(type) {
+	case bool:
+		if v.(bool){
+			return true
+		}
+		return false
+	case string:
+		if len(v.(string))>0{
+			return true
+		}
+		return false
+	case float64:
+		if int(v.(float64))>0{
+			return true
+		}
+		return false
 	}
 	return false
 }
-
 func parseBoolExp( s string)(*BoolExp  ,error){
 	v,err:=parseValue(s)
 	if err !=nil{

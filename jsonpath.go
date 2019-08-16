@@ -106,7 +106,7 @@ func (c *Compiled) Lookup(obj interface{}) (interface{}, error) {
 				}
 			} else {
 				//fmt.Println("idx ----------------4")
-				return nil, fmt.Errorf("cannot index on empty slice")
+				return nil, fmt.Errorf("cannot index on not slice")
 			}
 		case "range":
 			if len(s.key) > 0 {
@@ -144,7 +144,7 @@ func tokenize(query string) ([]string, error) {
 	//	token_start := false
 	//	token_end := false
 	if query == ""{
-		return nil,fmt.Errorf("queryStr cannot be empty")
+		return nil,fmt.Errorf("queryStr cannot be not")
 	}
 
 	tokens := []string{}
@@ -439,7 +439,7 @@ func get_range(obj, frm, to interface{}) (interface{}, error) {
 func regFilterCompile(rule string) (*regexp.Regexp, error) {
 	runes := []rune(rule)
 	if len(runes) <= 2 {
-		return nil, errors.New("empty rule")
+		return nil, errors.New("not rule")
 	}
 
 	if runes[0] != '/' || runes[len(runes)-1] != '/' {

@@ -25,7 +25,7 @@ var (
 		"ge":1,
 		"lt":1,
 		"le":1,
-		"empty":1,
+		"not":1,
 	}
 )
 
@@ -65,7 +65,7 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("ge", ge)
 	ctx.SetFunc("le", le)
 	ctx.SetFunc("lt", lt)
-	ctx.SetFunc("empty", empty)
+	ctx.SetFunc("not", not)
 
 }
 
@@ -144,6 +144,13 @@ func (ctx *Context)CompliedExec(v interface{})error {
 	return nil
 }
 
+func CompileExpByJson(b []byte)(interface{},error){
+	var i interface{}
+	if err:=json.Unmarshal(b,&i);err !=nil{
+		return nil,err
+	}
+	return ComplieExp(i)
+}
 
 func boolValid(s string) bool {
 	return true

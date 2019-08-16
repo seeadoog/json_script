@@ -73,7 +73,7 @@ func TestParse(t*testing.T){
   "then":[{
     "if":""
   }],
-  "else":["common.appid='100IME'","business.auf='rate;16000'",{
+  "else":["common.appid='123456'","business.auf='rate;16000'",{
     "if":"c > 6 & b == 5",
     "then":["common.appid1=''"]
   }]
@@ -94,7 +94,7 @@ func TestCompile(t *testing.T) {
   "else":[{
     "if":""
   }],
-  "then":["common.appid='100IME'","business.auf='rate;16000'",{
+  "then":["common.appid='123456'","business.auf='rate;16000'",{
     "if":"c > 6 & b == 5",
     "then":["common.appid1='hello'"]
   }]
@@ -202,7 +202,7 @@ func TestCompiled_String(t *testing.T) {
 
 func TestJsonPathLookup(t *testing.T) {
 	vm:=NewVm()
-	vm.Set("common.app_id","100IME")
+	vm.Set("common.app_id","123456")
 	vm.Set("common.uid","123456")
 //	vm.Set("business.eos","123456")
 	vm.Set("data.text","123456")
@@ -211,10 +211,10 @@ func TestJsonPathLookup(t *testing.T) {
 	err:=vm.ExecJson([]byte(`
 [
   {
-    "if": "or(and(eq(common.app_id,'100IME1'),eq(2,2)),eq(2,2))",
+    "if": "or(and(eq(common.app_id,'1234561'),eq(2,2)),eq(2,2))",
     "then": [
       {
-        "if": "eq(common.app_id,'100IME')",
+        "if": "eq(common.app_id,'123456')",
         "then": "printf('%s is niubi',common.app_id)",
         "else": "printf('invalid uid')"
       },
@@ -307,18 +307,43 @@ func TestEqualOp_Equal(t *testing.T) {
 		"channel":"ens",
 		"language":"en_us",
 		"domain":"iat",
-		"sample_rate":"160000",
+		"sample_rate":"16000",
+		"appid":"123456",
 	})
-	err:=vm.ExecJson([]byte(`
- {
-    "if":"or(empty(param.language),empty(param.domain),empty(param.sample_rate))",
-    "then":"param.ent='error'",
-    "else":[{
-        "if":"and(eq(param.language,'en_us'),or(eq(param.sample_rate,'16000'),eq(param.sample_rate,'16k')))",
-        "then":"param.ent='mardin_16k'"
-    }]
+	b:=[]byte(`
+[
+  {
+    "if": "or(not(param.language),not(param.domain),not(param.sample_rate))",
+    "then": "param.ent='error'",
+    "else": [
+      {
+        "if": "and(eq(param.language,'en_us'),or(eq(param.sample_rate,'16000'),eq(param.sample_rate,'16k')))",
+        "then": "param.ent='mardin_16k'"
+      }
+    ]
+  },
+  {
+    "if":"and(not(param.dwa),eq(param.appid,'123456'))",
+    "then":"param.dwa='wpgs'",
+    "else":"param.dwa=''"
   }
-`))
+]
+`)
+	var err error
+	for j:=0;j<0;j++{
+		err=vm.ExecJson(b)
+	}
+
+	var i interface{}
+	json.Unmarshal(b,&i)
+	r,err:=ComplieExp(i)
+	if err !=nil{
+		panic(err)
+	}
+	for j:=0;j<10000;j++{
+		ComplieExp(i)
+	}
+	vm.CompliedExec(r)
 	fmt.Println(err)
 	fmt.Println(vm.Get("param"))
 	fmt.Println(vm.Get("tmp"))

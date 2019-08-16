@@ -1,13 +1,17 @@
-{
-  "if": "or(empty(param.language),empty(param.domain),empty(param.sample_rate))",
-  "then": "param.ent=len",
-  "else": [
-    {
-      "if": "and(eq(param.language,'en_us'),or(eq(param.sample_rate,'16000'),eq(param.sample_rate,'16k')))",
-      "then": "param.ent='mardin_16k'"
-    },
-    {
-      "if":""
-    }
-  ]
-}
+[
+  {
+    "if": "or(not(param.language),not(param.domain),not(param.sample_rate))",
+    "then": "param.ent='error'",
+    "else": [
+      {
+        "if": "and(eq(param.language,'en_us'),or(eq(param.sample_rate,'16000'),eq(param.sample_rate,'16k')))",
+        "then": "param.ent='mardin_16k'"
+      }
+    ]
+  },
+  {
+    "if":"and(not(param.dwa),eq(param.appid='100IME'))",
+    "then":"param.dwa='wpgs'",
+    "else":"param.dwa=''"
+  }
+]
