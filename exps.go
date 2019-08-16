@@ -12,7 +12,7 @@ type Exp interface  {
 }
 //add ( 1 , len ( 'd' ) )
 func parseSetExp(s string)(*SetExps, error){
-	v:=strings.Split(s,"=")
+	v:=strings.SplitN(s,"=",2)
 	if len(v)!=2{
 		if len(v)==1{
 			val,err:=parseValue(v[0])

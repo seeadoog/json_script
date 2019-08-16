@@ -182,7 +182,10 @@ func TestScript(t *testing.T) {
 	vm.Set("param",param)
 	b:=[]byte(`
 [
-	
+{
+	"if":"not(in(param.language,'zh_cn','en_us'))",
+	"then":"return(10313,'language should be a value in[zh_cn , en_us]')"
+},
   {
     "if": "not(param.language)",
     "then": "return(10137,'param language is required')"
@@ -232,4 +235,61 @@ func TestScript(t *testing.T) {
 	fmt.Println(err)
 	fmt.Println(param)
 	fmt.Println(vm.Get("tmp"))
+}
+
+func TestBenchMark(t *testing.T)  {
+
+	var param = map[string]interface{}{
+		"name":"lixiang",
+		"age":15,
+		"desc":"",
+	}
+
+	for i:=0;i<100000;i++{
+		if param["name"].(string)=="lixiang" && param["age"].(int)>10{
+			param["type"] = "old"
+			param["desc1"] = fmt.Sprintf("name=%v,age=%v",param["name"],param["age"])
+		}else{
+			param["desc1"] = "a child"
+		}
+
+		param["desc"] = param["desc"].(string)+"js"
+	}
+	fmt.Println(param["desc"])
+}
+
+func TestBenchMark2(t *testing.T)  {
+
+	var param = map[string]interface{}{
+		"name":"lixiang",
+		"age":1,
+		"desc":"",
+	}
+
+	vm:=NewVm()
+	vm.Set("param",param)
+
+	exp:=[]byte(`
+[{
+	"if":"and(eq(param.name,'lixiang'),gt(param.age,10))",
+	"then":["param.type='old'","param.desc1=sprintf('name=%v,age=%v',param.name,param.age)"],
+	"else":"param.desc1='a child'"
+},
+
+"param.desc=append(param.desc,'js')",
+{
+	"if":"in(param.name,'lixiang','zhaobiao')",
+	"then":"printf('%v','yes niubi')"
+}
+]
+
+`)
+	cmd,err:=CompileExpByJson(exp)
+	if err !=nil{
+		panic(err)
+	}
+	for i:=0;i<1;i++{
+		vm.CompliedExec(cmd)
+	}
+	fmt.Println(vm.Get("param.desc"))
 }

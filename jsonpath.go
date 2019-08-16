@@ -740,3 +740,4 @@ func CachedJsonpathLookUp(obj interface{},jpath string)(interface{},error) {
 
 	return c.(*Compiled).Lookup(obj)
 }
+

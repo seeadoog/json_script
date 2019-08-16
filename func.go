@@ -37,7 +37,6 @@ var apd Func = func(i ...interface{}) interface{} {
 	}
 	return bf.String()
 }
-
 // split str
 var split Func = func(i ...interface{}) interface{} {
 	if len(i)>=2{
@@ -189,6 +188,19 @@ var ret Func = func(i ...interface{}) interface{} {
 	}
 	return &ErrorReturn{}
 }
+
+var in Func = func(i ...interface{}) interface{} {
+	if len(i)>=1{
+		t:=ConvertToString(i[0])
+		for k:=1;k< len(i);k++{
+			if t==ConvertToString(i[k]){
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func number(i interface{})  float64{
 	switch i.(type) {
 	case float64:
