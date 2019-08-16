@@ -4,6 +4,7 @@ import (
 	"unsafe"
 	"strings"
 	"errors"
+	"fmt"
 )
 
 type Exp interface  {
@@ -49,17 +50,95 @@ func (e *SetExps)Exec(ctx *Context)error{
 //a>b && (c>d)
 type BoolExp struct {
 	Op string  // > ,== ,< ,>= ,<=
-	Left Value
-	Right Value
-	Parent *BoolExp
-	LeftChild *BoolExp
-	RightChild *BoolExp
+	Value Value
 }
 
-func (b *BoolExp)Match()bool  {
-	return true
+
+
+
+func (b *BoolExp)Match(ctx *Context)bool  {
+	if v,ok:=b.Value.Get(ctx).(bool);ok && v{
+		return true
+	}
+	return false
 }
 
 func parseBoolExp( s string)(*BoolExp  ,error){
-	return &BoolExp{},nil
+	v,err:=parseBoolV(s)
+	if err !=nil{
+		return nil,err
+	}
+	return &BoolExp{Value:v},nil
+}
+
+
+type Expr interface {
+	Match() bool
+}
+
+type Op interface {
+	Equal(x,y Value,ctx *Context)bool
+}
+
+type BoolValue struct {
+	X Value
+	Op Op
+	Y Value
+}
+
+func (b *BoolValue)Match(ctx *Context)bool  {
+	return b.Op.Equal(b.X,b.Y,ctx)
+}
+
+func (b *BoolValue)Get(ctx *Context)interface{}  {
+	return b.Op.Equal(b.X,b.Y,ctx)
+}
+
+//a==b
+// a==b
+type EqualOp struct {
+
+}
+
+func (o *EqualOp)Equal(x,y Value,ctx *Context)bool  {
+	X:=x.Get(ctx)
+	Y:=y.Get(ctx)
+	//fmt.Println("bool op:",X,Y)
+	return fmt.Sprintf("%v",X)==fmt.Sprintf("%v",Y)
+}
+// a && b
+type AndOp struct {
+
+}
+
+func (o *AndOp)Equal(x,y Value,ctx *Context)bool  {
+	X:=x.Get(ctx)
+	Y:=y.Get(ctx)
+	if xb,ok:=X.(bool);ok && xb{
+		if yb,ok:=Y.(bool);ok && yb{
+			return true
+		}
+	}
+	return false
+}
+
+
+// a==b && c == d
+func parseBoolExps( s string){
+	//s  = strings.Trim(s," ")
+	//token:=make([]byte,0, len(s))
+	//for i:=0;i< len(s);i++{
+	//	v:=s[i]
+	//}
+}
+
+func parseOp(s string)Op  {
+	switch s {
+	case "==":
+		return &EqualOp{}
+	case "&&":
+		return &AndOp{}
+
+	}
+	return nil
 }

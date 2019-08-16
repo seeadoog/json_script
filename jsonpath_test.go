@@ -159,6 +159,98 @@ func TestExec(t *testing.T) {
 	vm.Exec("delete(user,key)")
 	vm.Exec("show(user)")
 	vm.Exec("show('nil value:',hal,isnil(user))")
+	vm.Exec("ar.len=len('123')")
+	fmt.Println(vm.Get("ar"))
+
+}
+
+func TestTrim(t *testing.T) {
+	//fmt.Println(trimBlock("(a=b)(c==d)"))
+	//fmt.Println(trimBlock("(()())"))
+	fmt.Println(TrimBlock("((a=b)(c==d))"))
+	fmt.Println(TrimBlock("(a==b)"))
+}
 
 
+//== >= <= | && | ||
+func TestCompiled_String(t *testing.T) {
+	b:=[]byte(`name=='lixiang'`)
+	//b=[]byte(`((3==3)&& (2==2)) && (3==3)`)
+	//b=[]byte(`isnil(name,age)`)
+	_,err:=parseBoolV(string(b))
+	if err !=nil{
+		panic(err)
+	}
+	vm:=NewVm()
+	vm.Exec("name='lixiang1'")
+	var v interface{}
+	err=json.Unmarshal([]byte(`[{
+	"if":"name=='lixiang'",
+	"then":"printf('%s',name)",
+	"else":"printf('%s','nima')"
+}]`),&v)
+	fmt.Println(vm.Exec(v),err)
+	vm.Exec("printf('%f',1)")
+
+	//fmt.Println(v.Get(vm))
+	//for _, v := range r {
+	//	for k, vv := range v {
+	//		fmt.Println(k,string(vv))
+	//	}
+	//}
+}
+
+func TestJsonPathLookup(t *testing.T) {
+	vm:=NewVm()
+	vm.Set("common.app_id","100IME")
+	vm.Set("common.uid","123456")
+	vm.Set("business.eos","123456")
+	vm.Set("data.text","123456")
+	fmt.Println(vm.Exec(`a=b`))
+	fmt.Println(vm.Get("common.app_id"))
+	err:=vm.ExecJson([]byte(`
+[
+  {
+    "if": "and(eq(common.app_id,'100IME'),eq(2,2))",
+    "then": [
+      {
+        "if": "common.uid=='123456'",
+        "then": "printf('%s is niubi',common.app_id)",
+        "else": "printf('invalid uid')"
+      },
+      {
+        "if":"business.eos==nil",
+        "then":"business.eos=12000"
+
+      }
+    ],
+    "else": "printf('invalid appid')"
+  },
+	"business.datelen=len(data.text)"
+]
+`))
+	fmt.Println(err)
+	fmt.Println(vm.Get("business"))
+}
+
+func TestCompiled_Lookup(t *testing.T) {
+	vm:=NewVm()
+	err:=vm.ExecJson([]byte(`
+[
+  	"a='hello'",
+	{
+		"if":"a=='hello'",
+  		"then":"b='is bello'",
+		"else":"b='is not hello'"
+	},
+	"bi.r=b",
+	"bi.len=len(b)",
+	"bi.len23=len('123')"
+]
+
+`))
+	fmt.Println(err)
+	fmt.Println(vm.Get("a"))
+	fmt.Println(vm.Get("b"))
+	fmt.Println(vm.Get("bi"))
 }

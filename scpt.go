@@ -2,6 +2,8 @@ package jsonscpt
 
 import (
 	"errors"
+	"fmt"
+	"encoding/json"
 )
 
 type Context struct {
@@ -26,6 +28,9 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("json_m", jsonMarshal)
 	ctx.SetFunc("delete", deleteFun)
 	ctx.SetFunc("isnil", isNil)
+	ctx.SetFunc("and", and)
+	ctx.SetFunc("eq", eq)
+	ctx.SetFunc("or", or)
 }
 
 func (ctx *Context)Func(name string,params ...interface{})  {
@@ -37,7 +42,7 @@ func (ctx *Context)SetFunc(name string,value Func)  {
 }
 
 func (ctx *Context)Set(k string,v interface{})  {
-	ctx.table[k] = v
+	MarshalInterface(k,ctx.table,v)
 }
 
 func (ctx *Context)Get(k string)interface{}  {
@@ -46,11 +51,22 @@ func (ctx *Context)Get(k string)interface{}  {
 }
 
 func (ctx *Context)Exec(v interface{}) error {
+	//if stv,ok:=v.(string);ok{
+	//	json.Unmarshal([]byte(stv),&v)
+	//}
 	cpd,err:=ComplieExp(v)
 	if err !=nil{
 		return err
 	}
 	return ctx.CompliedExec(cpd)
+}
+func (ctx *Context)ExecJson(s []byte) error {
+	var i interface{}
+	err:=json.Unmarshal(s,&i)
+	if err !=nil{
+		return err
+	}
+	return ctx.Exec(i)
 }
 
 func (ctx *Context)CompliedExec(v interface{})error {
@@ -58,11 +74,14 @@ func (ctx *Context)CompliedExec(v interface{})error {
 	case *IfExp:
 		ifexp:=v.(*IfExp)
 		if ifexp.If!=nil{
-			if ifexp.If.Match(){
+			if ifexp.If.Match(ctx){
 				if err:=ctx.CompliedExec(ifexp.Then);err !=nil{
 					return err
 				}
 			}else{
+				if ifexp.Else==nil{
+					return nil
+				}
 				if err:=ctx.CompliedExec(ifexp.Else);err !=nil{
 					return err
 				}
@@ -84,7 +103,7 @@ func (ctx *Context)CompliedExec(v interface{})error {
 			}
 		}
 	default:
-		return errors.New("invalid complied type")
+		return errors.New("invalid complied type:"+fmt.Sprintf("%v",v))
 	}
 	return nil
 }

@@ -119,6 +119,40 @@ var deleteFun Func = func(i ...interface{}) interface{} {
 	}
 	return nil
 }
+// &&
+var and Func = func(i ...interface{}) interface{} {
+	for _, v := range i {
+		if vb,ok:=v.(bool);ok{
+			if !vb{
+				return false
+			}
+		}
+	}
+	return true
+}
+//||
+var or Func = func(i ...interface{}) interface{} {
+	for _, v := range i {
+		if vb,ok:=v.(bool);ok&&vb{
+			return true
+		}
+	}
+	return false
+}
+//==
+var eq Func = func(i ...interface{}) interface{} {
+	if len(i)<2{
+		return false
+	}
+	return fmt.Sprintf("%v",i[0])==fmt.Sprintf("%v",i[1])
+}
+// >
+var gt Func = func(i ...interface{}) interface{} {
+	if len(i)<2{
+		return false
+	}
+
+}
 
 func ConvertToString(v interface{}) string {
 	switch v.(type) {

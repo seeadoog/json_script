@@ -1,10 +1,18 @@
 [
   {
-    "if": "business.rate==16000",
+    "if": "common.app_id=='100IME'",
     "then": [
-      "business.rate='16k'",
-      "business.name='lixiang'"
-    ]
+      {
+        "if": "common.uid=='123456'",
+        "then": "printf('%s is niubi',common.app_id)",
+        "else": "printf('invalid uid')"
+      },
+      {
+        "if":"business.eos==nil",
+        "then":"business.eos=12000"
+      }
+    ],
+    "else": "printf('invalid appid')"
   },
-  "business.finalEnt=append(business.ent,'_',business.rate)"
+  "business.datalen=len(data.text)"
 ]
