@@ -25,6 +25,7 @@ var (
 		"ge":1,
 		"lt":1,
 		"le":1,
+		"empty":1,
 	}
 )
 
@@ -64,6 +65,7 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("ge", ge)
 	ctx.SetFunc("le", le)
 	ctx.SetFunc("lt", lt)
+	ctx.SetFunc("empty", empty)
 
 }
 

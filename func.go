@@ -146,6 +146,19 @@ var eq Func = func(i ...interface{}) interface{} {
 	}
 	return fmt.Sprintf("%v",i[0])==fmt.Sprintf("%v",i[1])
 }
+
+var empty Func = func(i ...interface{}) interface{} {
+	if len(i)<1{
+		return false
+	}
+	if i[0]==nil{
+		return true
+	}
+	if s,ok:=i[0].(string);ok && s==""{
+		return true
+	}
+	return false
+}
 // >
 var gt Func = func(i ...interface{}) interface{} {
 	if len(i)>=2{

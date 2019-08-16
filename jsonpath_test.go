@@ -265,17 +265,17 @@ func TestBoolExp_Match(t *testing.T) {
 	vm.Exec("printf('%v',eq(2,2))")
 	b:=[]byte(`
 [
-  "user.name='lixiang'",
-  "user.age=1",
+  "param.name='lixiang'",
+  "$.age=1",
   {
-    "if":"gt(user.age,10)",
-    "then":"show('%s is an old man',user.name)",
+    "if":"gt($.age,10)",
+    "then":"printf('%s is an old man',user.name)",
     "else":[
-      "show('%s is an child',user.name)",
+      "printf('%s is an child',user.name)",
       "user.isold=false"
     ]
   },
-  "show('%v',user)"
+  "printf('%v',$)"
 ]
 `)
 	var i interface{}
@@ -291,7 +291,7 @@ func TestBoolExp_Match(t *testing.T) {
 		}
 	}
 
-	for i:=0;i<100000;i++{
+	for i:=0;i<1;i++{
 		err:=vm.CompliedExec(cd)
 		if err !=nil{
 			panic(err)
@@ -299,4 +299,27 @@ func TestBoolExp_Match(t *testing.T) {
 	}
 
 	fmt.Println(err)
+}
+
+func TestEqualOp_Equal(t *testing.T) {
+	vm:=NewVm()
+	vm.Set("param",map[string]interface{}{
+		"channel":"ens",
+		"language":"en_us",
+		"domain":"iat",
+		"sample_rate":"160000",
+	})
+	err:=vm.ExecJson([]byte(`
+ {
+    "if":"or(empty(param.language),empty(param.domain),empty(param.sample_rate))",
+    "then":"param.ent='error'",
+    "else":[{
+        "if":"and(eq(param.language,'en_us'),or(eq(param.sample_rate,'16000'),eq(param.sample_rate,'16k')))",
+        "then":"param.ent='mardin_16k'"
+    }]
+  }
+`))
+	fmt.Println(err)
+	fmt.Println(vm.Get("param"))
+	fmt.Println(vm.Get("tmp"))
 }
