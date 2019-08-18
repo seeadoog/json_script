@@ -82,7 +82,7 @@ func TestParse(t*testing.T){
 `
 var m = map[string]interface{}{}
 json.Unmarshal([]byte(s),&m)
-//p,_:= CompileExp(m)
+//p,_:= CompileExpFromJsonObject(m)
 //fmt.Println(p.(*IfExp).Else[0].(*SetExps).Variable)
 //fmt.Println(p.(*IfExp).Else[1].(*SetExps).Variable)
 //fmt.Println(p.(*IfExp).Else[2].(*IfExp).Then[0].(*SetExps).Variable)
@@ -111,7 +111,7 @@ var s2 = `[
 ]`
 	var m interface{}
 	json.Unmarshal([]byte(s2),&m)
-	_,err:= CompileExp(m)
+	_,err:= CompileExpFromJsonObject(m)
 	if err !=nil{
 		panic(err)
 	}
@@ -122,7 +122,7 @@ var s2 = `[
 	for i:=0;i<10000;i++{
 		vm:=NewVm()
 		vm.Set("business",busi)
-		CompileExp(m)
+		CompileExpFromJsonObject(m)
 	}
 
 	fmt.Println(busi)
@@ -234,12 +234,12 @@ func TestScript(t *testing.T) {
 
 	var i interface{}
 	json.Unmarshal(b,&i)
-	compiledCode,err:= CompileExp(i)
+	compiledCode,err:= CompileExpFromJsonObject(i)
 	if err !=nil{
 		panic(err)
 	}
 	for j:=0;j<1;j++{
-		//CompileExp(i)
+		//CompileExpFromJsonObject(i)
 		err = vm.Execute(compiledCode)
 	}
 	fmt.Println(err)
@@ -299,7 +299,7 @@ func TestBenchMark2(t *testing.T)  {
 ]
 
 `)
-	cmd,err:=CompileExpByJson(exp)
+	cmd,err:= CompileExpFromJson(exp)
 	if err !=nil{
 		panic(err)
 	}
@@ -340,10 +340,6 @@ func TestMarshal2(t *testing.T) {
 		},
 	}
 
-	fmt.Println(CachedJsonpathLookUp(param,"auth\\.auth_id"))
-	fmt.Println(CachedJsonpathLookUp(param,"name"))
-	fmt.Println(CachedJsonpathLookUp(param,"dfdf.sdfds"))
-	fmt.Println(CachedJsonpathLookUp(param,"array[1]"))
 	vm:=NewVm()
 	vm.Set("$",param)
 	var b = []byte(`
@@ -357,16 +353,29 @@ func TestMarshal2(t *testing.T) {
 {
 	"if":"and(not(contains($.ent,'16k')),not(contains($.ent,'8k')))",
 	"then":"$.ent=append($.ent,'_','16k')"
+},
+"str=split('hello,world,lixiang',',')",
+"idx=0",
+{
+	"for":"lt(idx,len(str))",
+	"do":[
+		{
+			"if":"eq(index(str,idx),'world')",
+			"then":["print('final str =',index(str,idx))","break"],
+			"else":"print('idx is =',index(str,idx))"
+		},
+		"idx=add(idx,1)"
+		
+	]
 }
-
 ]
 `)
-	cmd,err:=CompileExpByJson(b)
+	cmd,err:= CompileExpFromJson(b)
 	if err !=nil{
 		panic(err)
 	}
 	fmt.Println("compiled ------")
-	for i:=0;i<100000;i++{
+	for i:=0;i<1;i++{
 		err = vm.Execute(cmd)
 	}
 	fmt.Println(err)
@@ -447,10 +456,14 @@ func TestAndOp_Equal(t *testing.T) {
 ]
 
 `)
-	exp,err:=CompileExpByJson(b)
+	exp,err:= CompileExpFromJson(b)
 	if err !=nil{
 		panic(err)
 	}
 	fmt.Println(exp.Exec(vm))
 	fmt.Println(p)
+}
+
+func TestSwitchJson(t *testing.T) {
+	fmt.Println(splitSetExp("a=ent('a=b')"))
 }

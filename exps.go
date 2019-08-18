@@ -1,10 +1,8 @@
 package jsonscpt
 
 import (
-	"unsafe"
-	"strings"
 	"errors"
-	"fmt"
+	"unsafe"
 )
 
 type Exp interface  {
@@ -12,7 +10,10 @@ type Exp interface  {
 }
 //add ( 1 , len ( 'd' ) )
 func parseSetExp(s string)(*SetExps, error){
-	v:=strings.SplitN(s,"=",2)
+	v,err:=splitSetExp(s)
+	if err !=nil{
+		return nil,err
+	}
 	if len(v)!=2{
 		if len(v)==1{
 			val,err:=parseValue(v[0])
@@ -28,7 +29,7 @@ func parseSetExp(s string)(*SetExps, error){
 		return nil,errors.New("invalid setexp key:"+v[0])
 	}
 	if isSystemId(v[0]){
-		return nil,errors.New("system identify can not be variable:"+s)
+		return nil,errors.New("variable name cannot be system identify :"+s)
 	}
 	val,err:=parseValue(v[1])
 	if err !=nil{
@@ -37,6 +38,37 @@ func parseSetExp(s string)(*SetExps, error){
 	return &SetExps{Variable:v[0],Value:val},nil
 }
 
+func splitSetExp(s string)([]string,error)  {
+	var tokens = []string{}
+	var token = make([]byte,0, len(s))
+	cs:=0
+	for i:=0;i< len(s);i++{
+		v:=s[i]
+		token = append(token,v)
+		if v== '\'' && cs == 0{
+			cs = 1
+			continue
+		}
+		if v=='\'' && cs ==1{
+			cs=0
+			continue
+		}
+		if v=='=' && cs == 0 {
+			if len(token)<1{
+				return nil,errors.New("invalid set token:"+s)
+			}
+			tokens = append(tokens,string(token[:len(token)-1]))
+			token=token[:0]
+		}
+	}
+	if cs==1{
+		return nil,errors.New("invalid set exp:"+s)
+	}
+	if len(token)>0{
+		tokens = append(tokens,string(token))
+	}
+	return tokens,nil
+}
 
 func toString(b []byte)string  {
 	return *(*string)(unsafe.Pointer(&b))
@@ -59,16 +91,17 @@ func (e *SetExps)Exec(ctx *Context)error{
 	return MarshalInterface(e.Variable,ctx.table,e.Value.Get(ctx))
 }
 //a>b && (c>d)
-type BoolExp struct {
+type BoolValue struct {
 	//Op string  // > ,== ,< ,>= ,<=
 	Value Value
 }
 
-func (b *BoolExp)Match(ctx *Context)bool  {
+func (b *BoolValue)Match(ctx *Context)bool  {
 	return convertToBool(b.Value.Get(ctx))
 }
 
-//func (b *BoolExp)ExecJsonObject(ctx *Context)error{
+
+//func (b *BoolValue)ExecJsonObject(ctx *Context)error{
 //
 //}
 
@@ -105,39 +138,43 @@ func (es Exps)Exec(ctx *Context)error  {
 	return nil
 }
 
+//for
 
+type ForExp struct {
+	Addtion *BoolValue
+	Do      Exp
+}
 
-
-
-
-
-func parseBoolExp( s string)(*BoolExp  ,error){
-	v,err:=parseValue(s)
-	if err !=nil{
-		return nil,err
+func (f *ForExp)Exec(ctx *Context)error  {
+	for f.Addtion.Match(ctx){
+		if err:=f.Do.Exec(ctx);err !=nil{
+			if err == breakError{
+				break
+			}
+			return err
+		}
 	}
-	return &BoolExp{Value:v},nil
+	return nil
 }
 
 
 
+type BreakExp struct {
+
+}
+
+func (b *BreakExp)Exec(ctx *Context)error  {
+	return breakError
+}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+func parseBoolExp( s string)(*BoolValue,error){
+	v,err:=parseValue(s)
+	if err !=nil{
+		return nil,err
+	}
+	return &BoolValue{Value: v},nil
+}
 
 
 type Expr interface {
@@ -148,71 +185,68 @@ type Op interface {
 	Equal(x,y Value,ctx *Context)bool
 }
 
-type BoolValue struct {
-	X Value
-	Op Op
-	Y Value
-}
-
-func (b *BoolValue)Match(ctx *Context)bool  {
-	return b.Op.Equal(b.X,b.Y,ctx)
-}
-
-func (b *BoolValue)Get(ctx *Context)interface{}  {
-	return b.Op.Equal(b.X,b.Y,ctx)
-}
-
-
-
-//a==b
-// a==b
-type EqualOp struct {
-
-}
-
-func (o *EqualOp)Equal(x,y Value,ctx *Context)bool  {
-	X:=x.Get(ctx)
-	Y:=y.Get(ctx)
-	//fmt.Println("bool op:",X,Y)
-	return fmt.Sprintf("%v",X)==fmt.Sprintf("%v",Y)
-}
-// a && b
-type AndOp struct {
-
-}
-
-func (o *AndOp)Equal(x,y Value,ctx *Context)bool  {
-	X:=x.Get(ctx)
-	Y:=y.Get(ctx)
-	if xb,ok:=X.(bool);ok && xb{
-		if yb,ok:=Y.(bool);ok && yb{
-			return true
-		}
-	}
-	return false
-}
-
-
-// a==b && c == d
-func parseBoolExps( s string){
-	//s  = strings.Trim(s," ")
-	//token:=make([]byte,0, len(s))
-	//for i:=0;i< len(s);i++{
-	//	v:=s[i]
-	//}
-}
-
-func parseOp(s string)Op  {
-	switch s {
-	case "==":
-		return &EqualOp{}
-	case "&&":
-		return &AndOp{}
-
-	}
-	return nil
-}
-
-type ForExp struct {
-
-}
+//type BoolValue struct {
+//	X Value
+//	Op Op
+//	Y Value
+//}
+//
+//func (b *BoolValue)Match(ctx *Context)bool  {
+//	return b.Op.Equal(b.X,b.Y,ctx)
+//}
+//
+//func (b *BoolValue)Get(ctx *Context)interface{}  {
+//	return b.Op.Equal(b.X,b.Y,ctx)
+//}
+//
+//
+//
+////a==b
+//// a==b
+//type EqualOp struct {
+//
+//}
+//
+//func (o *EqualOp)Equal(x,y Value,ctx *Context)bool  {
+//	X:=x.Get(ctx)
+//	Y:=y.Get(ctx)
+//	//fmt.Println("bool op:",X,Y)
+//	return fmt.Sprintf("%v",X)==fmt.Sprintf("%v",Y)
+//}
+//// a && b
+//type AndOp struct {
+//
+//}
+//
+//func (o *AndOp)Equal(x,y Value,ctx *Context)bool  {
+//	X:=x.Get(ctx)
+//	Y:=y.Get(ctx)
+//	if xb,ok:=X.(bool);ok && xb{
+//		if yb,ok:=Y.(bool);ok && yb{
+//			return true
+//		}
+//	}
+//	return false
+//}
+//
+//
+//// a==b && c == d
+//func parseBoolExps( s string){
+//	//s  = strings.Trim(s," ")
+//	//token:=make([]byte,0, len(s))
+//	//for i:=0;i< len(s);i++{
+//	//	v:=s[i]
+//	//}
+//}
+//
+//func parseOp(s string)Op  {
+//	switch s {
+//	case "==":
+//		return &EqualOp{}
+//	case "&&":
+//		return &AndOp{}
+//
+//	}
+//	return nil
+//}
+//

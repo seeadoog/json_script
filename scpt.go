@@ -3,6 +3,7 @@ package jsonscpt
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 var (
 	systemId = map[string]int{
@@ -29,6 +30,7 @@ var (
 		"return":1,
 		"in":1,
 		"contains":1,
+		"index":1,
 	}
 )
 
@@ -74,6 +76,7 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("return", ret)
 	ctx.SetFunc("in", in)
 	ctx.SetFunc("contains", contains)
+	ctx.SetFunc("index", index)
 
 
 }
@@ -99,7 +102,7 @@ func (ctx *Context) ExecJsonObject(v interface{}) error {
 	//if stv,ok:=v.(string);ok{
 	//	json.Unmarshal([]byte(stv),&v)
 	//}
-	cpd,err:= CompileExp(v)
+	cpd,err:= CompileExpFromJsonObject(v)
 	if err !=nil{
 		return err
 	}
@@ -118,12 +121,12 @@ func (c *Context)Execute(exp Exp) error {
 	return exp.Exec(c)
 }
 
-func CompileExpByJson(b []byte)(Exp,error){
+func CompileExpFromJson(b []byte)(Exp,error){
 	var i interface{}
 	if err:=json.Unmarshal(b,&i);err !=nil{
 		return nil,err
 	}
-	return CompileExp(i)
+	return CompileExpFromJsonObject(i)
 }
 
 func boolValid(s string) bool {
@@ -132,7 +135,7 @@ func boolValid(s string) bool {
 
 
 type IfExp struct {
-	If *BoolExp
+	If *BoolValue
 	Then Exp
 	Else Exp
 }
@@ -157,8 +160,12 @@ func (f *IfExp)Exec(ctx *Context)error{
 
 
 
-func CompileExp(v interface{}) (Exp,error) {
+func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 	if exp,ok:=v.(string);ok{
+		if exp=="break"{   // parse break
+			return &BreakExp{},nil
+		}
+
 		e,err:=parseSetExp(exp)
 		if err !=nil{
 			return nil, err
@@ -166,8 +173,9 @@ func CompileExp(v interface{}) (Exp,error) {
 		return e,nil
 	}
 	if m,ok:=v.(map[string]interface{});ok{
-		exp:=&IfExp{}
+
 		if ifexp,ok:=m["if"].(string);ok{
+			exp:=&IfExp{}
 			efe,err:=parseBoolExp(ifexp);
 			if err==nil{
 				exp.If = efe
@@ -175,7 +183,7 @@ func CompileExp(v interface{}) (Exp,error) {
 				return nil,err
 			}
 			if then,ok:=m["then"];ok && then !=nil {
-				var parsedExp,err = CompileExp(then)
+				var parsedExp,err = CompileExpFromJsonObject(then)
 				if err !=nil{
 					return nil,err
 				}
@@ -184,21 +192,39 @@ func CompileExp(v interface{}) (Exp,error) {
 				return  nil,errors.New("line:"+ifexp+" has no then block")
 			}
 			if el,ok:=m["else"];ok && el !=nil{
-				var parsedExp,err = CompileExp(el)
+				var parsedExp,err = CompileExpFromJsonObject(el)
 				if err !=nil{
 					return nil,err
 				}
 				exp.Else = parsedExp
 			}
+			return exp,nil
+		}else if forexp,ok:=m["for"].(string);ok{  //parse for
+			exp:=&ForExp{}
+			efe,err:=parseBoolExp(forexp);
+			if err !=nil{
+				return nil,err
+			}
+			exp.Addtion = efe
+			if do,ok:=m["do"];ok && do !=nil{
+				blexp,err:=CompileExpFromJsonObject(do)
+				if err !=nil{
+					return nil,err
+				}
+				exp.Do = blexp
+			}else{
+				return nil,errors.New("for do is nil")
+			}
+			return exp,nil
 		}
 
-		return exp,nil
+		return nil,errors.New("invalid object:"+fmt.Sprintf("%v",v))
 	}
 
 	if eps,ok:=v.([]interface{});ok {
 		var parsedExp = Exps{}
 		for i := 0; i < len(eps); i++ {
-			e,err:= CompileExp(eps[i])
+			e,err:= CompileExpFromJsonObject(eps[i])
 			if err !=nil{
 				return nil,err
 			}else{

@@ -11,7 +11,7 @@ import (
 
 type Value interface {
 	Get(ctx *Context) interface{}
-	//GetName()string
+	GetName()string
 }
 type ConstValue struct {
 	v interface{}
@@ -20,9 +20,9 @@ type ConstValue struct {
 func (v *ConstValue) Get(ctx *Context) interface{} {
 	return v.v
 }
-//func (v *ConstValue)GetName()string  {
-//	return ""
-//}
+func (v *ConstValue)GetName()string  {
+	return ""
+}
 //this is variable ,the value from context
 type VarValue struct {
 	Key string
@@ -33,9 +33,9 @@ func (v *VarValue) Get(ctx *Context) interface{} {
 	return o
 }
 
-//func (v *VarValue)GetName()string  {
-//	return v.Key
-//}
+func (v *VarValue)GetName()string  {
+	return v.Key
+}
 
 // value of function
 type FuncValue struct {
@@ -53,10 +53,10 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 	}
 	return nil
 }
-//func (v *FuncValue)GetName()string  {
-//	return v.FuncName
-//}
-//
+func (v *FuncValue)GetName()string  {
+	return v.FuncName
+}
+
 var funv = regexp.MustCompile(`(\w+)\((.+)*\)$`)
 func parseValue(s string) (Value,error) {
 	s = strings.Trim(s," ")

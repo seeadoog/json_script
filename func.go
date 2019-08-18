@@ -235,6 +235,21 @@ var in Func = func(i ...interface{}) interface{} {
 	return false
 }
 
+var index Func = func(i ...interface{}) interface{} {
+	if len(i)<2{
+		return nil
+	}
+
+	switch i[0].(type) {
+	case []string:
+		return i[0].([]string)[int(number(i[1]))]
+	case []int:
+		return i[0].([]int)[int(number(i[1]))]
+	case []interface{}:
+		return i[0].([]interface{})[int(number(i[1]))]
+	}
+	return nil
+}
 func number(i interface{})  float64{
 	switch i.(type) {
 	case float64:

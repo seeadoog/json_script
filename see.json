@@ -2,6 +2,11 @@
   "field":"",
   "op":"script",
   "script":[
-
+    {
+      "for":"i=0;lt(i,10);i=add(i,1)",
+      "script":[
+        ""
+      ]
+    }
   ]
 }
