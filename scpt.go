@@ -1,9 +1,9 @@
 package jsonscpt
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"encoding/json"
 )
 var (
 	systemId = map[string]int{
@@ -11,6 +11,7 @@ var (
 		"len":1,
 		"split":1,
 		"printf":1,
+		"print":1,
 		"sprintf":1,
 		"add":1,
 		"json_m":1,
@@ -28,6 +29,7 @@ var (
 		"not":1,
 		"return":1,
 		"in":1,
+		"contains":1,
 	}
 )
 
@@ -37,6 +39,7 @@ func isSystemId(s string)bool  {
 	}
 	return false
 }
+
 type Context struct {
 	table map[string]interface{}  // save all variables
 }
@@ -55,6 +58,7 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("len",lens)
 	ctx.SetFunc("split",split)
 	ctx.SetFunc("printf",printf)
+	ctx.SetFunc("print",printlnn)
 	ctx.SetFunc("sprintf",sprintf)
 	ctx.SetFunc("add",add)
 	ctx.SetFunc("json_m", jsonMarshal)
@@ -70,6 +74,8 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("not", not)
 	ctx.SetFunc("return", ret)
 	ctx.SetFunc("in", in)
+	ctx.SetFunc("contains", contains)
+
 
 }
 
@@ -115,6 +121,7 @@ func (ctx *Context)CompliedExec(v interface{})error {
 		ifexp:=v.(*IfExp)
 		if ifexp.If!=nil{
 			if ifexp.If.Match(ctx){
+
 				if err:=ctx.CompliedExec(ifexp.Then);err !=nil{
 					return err
 				}
@@ -167,6 +174,11 @@ type IfExp struct {
 	Else interface{}
 }
 
+//func (f *IfExp)Exec(ctx *Context)error{
+//	if f.If.Match(ctx){
+//
+//	}
+//}
 
 
 func ComplieExp(v interface{}) (interface{},error) {
@@ -186,21 +198,24 @@ func ComplieExp(v interface{}) (interface{},error) {
 			}else{
 				return nil,err
 			}
-		}
-		if then,ok:=m["then"];ok && then !=nil {
-			var parsedExp,err = ComplieExp(then)
-			if err !=nil{
-				return nil,err
+			if then,ok:=m["then"];ok && then !=nil {
+				var parsedExp,err = ComplieExp(then)
+				if err !=nil{
+					return nil,err
+				}
+				exp.Then = parsedExp
+			}else{
+				return  nil,errors.New("line:"+ifexp+" has no then block")
 			}
-			exp.Then = parsedExp
-		}
-		if el,ok:=m["else"];ok && el !=nil{
-			var parsedExp,err = ComplieExp(el)
-			if err !=nil{
-				return nil,err
+			if el,ok:=m["else"];ok && el !=nil{
+				var parsedExp,err = ComplieExp(el)
+				if err !=nil{
+					return nil,err
+				}
+				exp.Else = parsedExp
 			}
-			exp.Else = parsedExp
 		}
+
 		return exp,nil
 	}
 

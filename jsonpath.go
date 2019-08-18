@@ -15,7 +15,7 @@ import (
 var ErrGetFromNullObj = errors.New("get attribute from null object")
 
 func JsonPathLookup(obj interface{}, jpath string) (interface{}, error) {
-	c, err := Compile(jpath)
+	c, err := compile(jpath)
 	if err != nil {
 		return nil, err
 	}
@@ -33,16 +33,16 @@ type step struct {
 	args interface{}
 }
 
-func MustCompile(jpath string) *Compiled {
-	c, err := Compile(jpath)
+func mustCompile(jpath string) *Compiled {
+	c, err := compile(jpath)
 	if err != nil {
 		panic(err)
 	}
 	return c
 }
 
-func Compile(jpath string) (*Compiled, error) {
-	tokens, err := tokenize(jpath)
+func compile(jpath string) (*Compiled, error) {
+	tokens, err := tokeniz3(jpath)
 	if err != nil {
 		return nil, err
 	}
@@ -223,9 +223,9 @@ func tokenize(query string) ([]string, error) {
  op: "root", "key", "idx", "range", "filter", "scan"
 */
 func parse_token(token string) (op string, key string, args interface{}, err error) {
-	if token == "$" {
-		return "root", "$", nil, nil
-	}
+	//if token == "$" {
+	//	return "root", "$", nil, nil
+	//}
 	if token == "*" {
 		return "scan", "*", nil, nil
 	}
@@ -296,9 +296,10 @@ func parse_token(token string) (op string, key string, args interface{}, err err
 }
 
 func filter_get_from_explicit_path(obj interface{}, path string) (interface{}, error) {
-	steps, err := tokenize(path)
+	steps, err := tokeniz3(path)
 	//fmt.Println("f: steps: ", steps, err)
 	//fmt.Println(path, steps)
+	//fmt.Println("===========================")
 	if err != nil {
 		return nil, err
 	}
@@ -730,7 +731,7 @@ var jsonPathComplied sync.Map
 func CachedJsonpathLookUp(obj interface{},jpath string)(interface{},error) {
 	c,ok:=jsonPathComplied.Load(jpath)
 	if !ok{
-		co, err := Compile(jpath)
+		co, err := compile(jpath)
 		if err !=nil{
 			return nil,err
 		}

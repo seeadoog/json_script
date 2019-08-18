@@ -74,6 +74,11 @@ var printf Func = func(i ...interface{}) interface{} {
 	return nil
 }
 
+var printlnn Func = func(i ...interface{}) interface{} {
+		fmt.Println(i...)
+	return nil
+}
+
 var sprintf Func = func(i ...interface{}) interface{} {
 	if len(i)>0{
 		if format,ok:=i[0].(string);ok{
@@ -189,13 +194,42 @@ var ret Func = func(i ...interface{}) interface{} {
 	return &ErrorReturn{}
 }
 
+var contains Func = func(i ...interface{}) interface{} {
+	if len(i)<2{
+		return false
+	}
+	return strings.Contains(ConvertToString(i[0]),ConvertToString(i[1]))
+}
+
 var in Func = func(i ...interface{}) interface{} {
 	if len(i)>=1{
+
 		t:=ConvertToString(i[0])
 		for k:=1;k< len(i);k++{
-			if t==ConvertToString(i[k]){
-				return true
+			switch i[k].(type) {
+			case string:
+				if t == i[k].(string){
+					return true
+				}
+			case []interface{}:
+				for _,vv:=range i[k].([]interface{}){
+					if t == ConvertToString(vv){
+						return true
+					}
+				}
+			case []string:
+				for _,vv:=range i[k].([]string){
+					if t == vv{
+						return true
+					}
+				}
+			default:
+				if t==ConvertToString(i[k]){
+					return true
+				}
 			}
+
+
 		}
 	}
 	return false

@@ -27,29 +27,7 @@ const (
 // src must be map[string]interface{}
 // Marshal() do not support expression start with  $,$[0] .
 //if you need this function ,please use MarshalInterface()
-func Marshal(query string, src interface{}, value interface{}) error {
-	return marshal(query, src, value, 0)
-}
 
-func marshal(query string, src interface{}, value interface{}, start int) error {
-	tks, err := tokenize2(query)
-	if err != nil {
-		return err
-	}
-	var cp = src
-	return parserToken(tks, cp, value)
-}
-
-func Marshals(querys []QueryProp) (tmp map[string]interface{}, err error) {
-	m := map[string]interface{}{}
-	for _, v := range querys {
-		if err := Marshal(v.Query, m, v.Value); err != nil {
-			return nil, err
-		}
-	}
-	return m, nil
-
-}
 
 //resolve the token is a field or array
 //return -1 and field name if token is field
@@ -82,7 +60,7 @@ var tokensCache sync.Map
 func tokenize2(query string) ([]string, error) {
 	tkn,ok:=tokensCache.Load(query)
 	if !ok{
-		tkns :=strings.Split(strings.TrimLeft(query, "$."), ".")
+		tkns :=strings.Split(query, ".")
 		tokensCache.Store(query,tkns)
 		return tkns,nil
 	}
@@ -99,13 +77,14 @@ func MarshalInterface(query string, dst interface{}, value interface{}) error {
 
 func marshalInterface(query string, dst interface{}, value interface{}) error {
 	//fmt.Println(reflect.TypeOf(dst))
-	tks, err := tokenize2(query)
+	tks, err := compileTokens(query)
+
 	if err != nil {
 		return err
 	}
 	var cp = dst
 	if cpi, ok := dst.(*interface{}); ok {
-		if strings.TrimLeft(query, "$.") == "" {
+		if query == "" {
 			*cpi = value
 			return nil
 		}
@@ -115,10 +94,12 @@ func marshalInterface(query string, dst interface{}, value interface{}) error {
 			cp = cpi
 			goto done
 		} else {
-			yp, idx, err := yyp(tks[0])
-			if err != nil {
-				return err
-			}
+			//yp, idx, err := yyp(tks[0])
+			yp:=tks[0].key
+			idx:=tks[0].index
+			//if err != nil {
+			//	return err
+			//}
 			if idx == TYPE_KEY {
 				*cpi = map[string]interface{}{}
 			} else {
@@ -140,13 +121,10 @@ done:
 
 }
 
-func parserToken(tks []string, cp, value interface{}) error {
-	for k, v := range tks {
-		field, idx, err := yyp(v)
-		if err != nil {
-			return err
-		}
-		//map
+func parserToken(tks []tokens, cp, value interface{}) error {
+	for k:=0;k< len(tks);k++ {
+		field:=tks[k].key
+		idx:=tks[k].index
 		if idx == TYPE_KEY {
 			cpm, ok := cp.(map[string]interface{})
 			if !ok {
@@ -259,83 +237,63 @@ func SwitchJson(exps []SwitchExp, dst interface{}, data interface{}) error {
 	return nil
 }
 
-//
-//func tokenize(query string) ([]string, error) {
-//	tokens := []string{}
-//	//	token_start := false
-//	//	token_end := false
-//	token := ""
-//
-//	// fmt.Println("-------------------------------------------------- start")
-//	for idx, x := range query {
-//		token += string(x)
-//		// //fmt.Printf("idx: %d, x: %s, token: %s, tokens: %v\n", idx, string(x), token, tokens)
-//		if idx == 0 {
-//			if token == "$" || token == "@" {
-//				tokens = append(tokens, token[:])
-//				token = ""
-//				continue
-//			} else {
-//				return nil, fmt.Errorf("should start with '$'")
-//			}
-//		}
-//		if token == "." {
-//			continue
-//		} else if token == ".." {
-//			if tokens[len(tokens)-1] != "*" {
-//				tokens = append(tokens, "*")
-//			}
-//			token = "."
-//			continue
-//		} else {
-//			// fmt.Println("else: ", string(x), token)
-//			if strings.Contains(token, "[") {
-//				// fmt.Println(" contains [ ")
-//				if x == ']' && !strings.HasSuffix(token, "\\]") {
-//					if token[0] == '.' {
-//						tokens = append(tokens, token[1:])
-//					} else {
-//						tokens = append(tokens, token[:])
-//					}
-//					token = ""
-//					continue
-//				}
-//			} else {
-//				// fmt.Println(" doesn't contains [ ")
-//				if x == '.' {
-//					if token[0] == '.' {
-//						tokens = append(tokens, token[1:len(token)-1])
-//					} else {
-//						tokens = append(tokens, token[:len(token)-1])
-//					}
-//					token = "."
-//					continue
-//				}
-//			}
-//		}
-//	}
-//	if len(token) > 0 {
-//		if token[0] == '.' {
-//			token = token[1:]
-//			if token != "*" {
-//				tokens = append(tokens, token[:])
-//			} else if tokens[len(tokens)-1] != "*" {
-//				tokens = append(tokens, token[:])
-//			}
-//		} else {
-//			if token != "*" {
-//				tokens = append(tokens, token[:])
-//			} else if tokens[len(tokens)-1] != "*" {
-//				tokens = append(tokens, token[:])
-//			}
-//		}
-//	}
-//	// fmt.Println("finished tokens: ", tokens)
-//	// fmt.Println("================================================= done ")
-//	return tokens, nil
-//}
-//check that if rule is a valid rule
-var ruleRegexp= regexp.MustCompile(`\w+(\[\d+\])?(\.\w+(\[\d+\])?)*$`)
+var ruleRegexp= regexp.MustCompile(`(\w+|\$)(\[\d+\])?(\.\w+(\[\d+\])?)*$`)
 func checkRule(rule string) bool {
 	return ruleRegexp.MatchString(rule)
+}
+
+
+type tokens struct {
+	index int
+	key string
+}
+
+var cachedTokens = sync.Map{}
+
+func compileTokens(s string)([]tokens,error){
+
+	cachedTkns,ok:=cachedTokens.Load(s)
+	if ok{
+		return cachedTkns.([]tokens),nil
+	}
+	tkns,err:=tokeniz3(s)
+	if err !=nil{
+		return nil,err
+	}
+
+	var ctkns= make([]tokens,0, len(tkns))
+	//fmt.Println("--------------------")
+	for i:=0;i< len(tkns);i++{
+		key,idx,err:=yyp(tkns[i])
+		if err !=nil{
+			return nil,err
+		}
+		ctkns = append(ctkns,tokens{index:idx,key:key})
+	}
+	cachedTokens.Store(s,ctkns)
+	return ctkns,nil
+}
+//转义
+func tokeniz3(s string)  ([]string, error) {
+	tokens:=make([]string,0,5)
+	token:=make([]byte,0, len(s))
+	//fmt.Println("====================")
+	for i:=0;i< len(s);i++{
+		v:=s[i]
+		token = append(token,v)
+
+		if v=='.'{
+			if len(token)>1{
+				if token[len(token)-2]=='\\'{
+					continue
+				}
+			}
+			tokens = append(tokens,strings.Replace(string(token[:len(token)-1]),"\\","",-1))
+			token=token[:0]
+		}
+	}
+	if len(token)>0{
+		tokens = append(tokens,strings.Replace(string(token),"\\","",-1))
+	}
+	return tokens,nil
 }

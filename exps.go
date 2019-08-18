@@ -60,7 +60,7 @@ func (e *SetExps)Exec(ctx *Context)error{
 }
 //a>b && (c>d)
 type BoolExp struct {
-	Op string  // > ,== ,< ,>= ,<=
+	//Op string  // > ,== ,< ,>= ,<=
 	Value Value
 }
 
@@ -74,10 +74,7 @@ func (b *BoolExp)Match(ctx *Context)bool  {
 func convertToBool(v interface{})bool  {
 	switch v.(type) {
 	case bool:
-		if v.(bool){
-			return true
-		}
-		return false
+		return v.(bool)
 	case string:
 		if len(v.(string))>0{
 			return true
@@ -171,4 +168,8 @@ func parseOp(s string)Op  {
 
 	}
 	return nil
+}
+
+type ForExp struct {
+
 }

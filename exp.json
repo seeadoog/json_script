@@ -1,32 +1,11 @@
 [
   {
-    "if": "not(param.language)",
-    "then": "return(10137,'param language is required')"
-  },
-  {
-    "if": "not(param.domain)",
-    "then": "return(10137,'param language is required')"
-  },
-  {
-    "if": "not(param.sample_rate)",
-    "then": "return(10137,'param language is required')"
-  },
-  {
-    "if": "or(not(param.language),not(param.domain),not(param.sample_rate))",
-    "then": [
-      "return(10137,'param convert error')"
-    ],
-    "else": [
+    "if":"eq($.common.apppi,'123456')",
+    "then":[
       {
-        "if": "and(eq(param.language,'en_us'),or(eq(param.sample_rate,'16000'),eq(param.sample_rate,'16k')))",
-        "then": "param.ent='mardin_16k'"
+        "if":"not(in($.data.encoding,'raw','opus-ogg','opus'))",
+        "then":"$.data.encoding=''"
       }
     ]
-  },
-  {
-    "if": "and(not(param.dwa),eq(param.appid,'123456'))",
-    "then": "param.dwa='wpgs'",
-    "else": "param.dwa=''"
-  },
-  "param.cc=5"
+  }
 ]

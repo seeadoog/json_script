@@ -1,6 +1,7 @@
 package jsonscpt
 
 import (
+	"github.com/robertkrimen/otto"
 	"testing"
 	"fmt"
 	"encoding/json"
@@ -57,7 +58,7 @@ func TestReg2(t *testing.T)  {
 	fmt.Println(vm.Get("common.ent"))
 	fmt.Println(vm.Get("common.names[1]"))
 	//fmt.Println(v.(*FuncValue).FuncName)
-	//fmt.Println(v.(*FuncValue).params)
+	//fmt.Println(v.(*FuncValue).Params)
 	//for _, v := range r {
 	//	//for _, vv := range v {
 	//	//	fmt.Println(string(vv))
@@ -172,6 +173,7 @@ func TestExec(t *testing.T) {
 func TestScript(t *testing.T) {
 	vm:=NewVm()
 	var param = map[string]interface{}{
+
 		"channel":"ens",
 		"language":"en_us",
 		"domain":"iat",
@@ -182,6 +184,14 @@ func TestScript(t *testing.T) {
 	vm.Set("param",param)
 	b:=[]byte(`
 [
+{
+	"if":"param.appid",
+	"then":"param.final_appid=append(param.appid,'_','final')"
+},
+{
+	"if":"not(eq(param.appid,'123456'))",
+	"then":"return(10313,'appid is not 123456')"
+},
 {
 	"if":"not(in(param.language,'zh_cn','en_us'))",
 	"then":"return(10313,'language should be a value in[zh_cn , en_us]')"
@@ -214,8 +224,8 @@ func TestScript(t *testing.T) {
     "if": "and(not(param.dwa),eq(param.appid,'123456'))",
     "then": "param.dwa='wpgs'",
     "else": "param.dwa=''"
-  },
-  "param.cc=5"
+  }
+  
 ]`)
 	var err error
 	for j:=0;j<0;j++{
@@ -228,7 +238,7 @@ func TestScript(t *testing.T) {
 	if err !=nil{
 		panic(err)
 	}
-	for j:=0;j<100000;j++{
+	for j:=0;j<1;j++{
 		//ComplieExp(i)
 		err = vm.CompliedExec(compiledCode)
 	}
@@ -245,7 +255,7 @@ func TestBenchMark(t *testing.T)  {
 		"desc":"",
 	}
 
-	for i:=0;i<100000;i++{
+	for i:=0;i<1;i++{
 		if param["name"].(string)=="lixiang" && param["age"].(int)>10{
 			param["type"] = "old"
 			param["desc1"] = fmt.Sprintf("name=%v,age=%v",param["name"],param["age"])
@@ -264,6 +274,12 @@ func TestBenchMark2(t *testing.T)  {
 		"name":"lixiang",
 		"age":1,
 		"desc":"",
+		"dsf":map[string]interface{}{
+			"name":"lixiang",
+			"age":1,
+			"desc":"",
+
+		},
 	}
 
 	vm:=NewVm()
@@ -276,7 +292,6 @@ func TestBenchMark2(t *testing.T)  {
 	"else":"param.desc1='a child'"
 },
 
-"param.desc=append(param.desc,'js')",
 {
 	"if":"in(param.name,'lixiang','zhaobiao')",
 	"then":"printf('%v','yes niubi')"
@@ -292,4 +307,147 @@ func TestBenchMark2(t *testing.T)  {
 		vm.CompliedExec(cmd)
 	}
 	fmt.Println(vm.Get("param.desc"))
+}
+
+func TestMarshal(t *testing.T) {
+	var param = map[string]interface{}{
+		"name":"lixiang",
+		"age":1,
+		"desc":"",
+		"dsf":map[string]interface{}{
+			"name":"lixiang",
+			"age":1,
+			"desc":"",
+		},
+	}
+
+	for i:=0;i<100000;i++{
+		json.Marshal(param)
+	}
+}
+
+func TestMarshal2(t *testing.T) {
+	var param = map[string]interface{}{
+		"name":"lixiang",
+		"age":1,
+		"desc":"",
+		"rate":"16000",
+		"auth.auth_id":"llliuyu",
+		"array":[]int{1,2,3,4},
+		"dfdf":map[string]interface{}{
+			"sdfds":"sdfsdfds",
+			"sdfdfs":"sdfsdfds",
+		},
+	}
+
+	fmt.Println(CachedJsonpathLookUp(param,"auth\\.auth_id"))
+	fmt.Println(CachedJsonpathLookUp(param,"name"))
+	fmt.Println(CachedJsonpathLookUp(param,"dfdf.sdfds"))
+	fmt.Println(CachedJsonpathLookUp(param,"array[1]"))
+	vm:=NewVm()
+	vm.Set("$",param)
+	var b = []byte(`
+[
+"str='16k,16000,8k,8000'",
+{
+	"if":"not(in($.rate,split(str,',')))",
+	"then":"return(10137,sprintf('rate %s is invalid',$.rate))",
+	"else":"$.ent=append($.name,'_',$.rate)"
+},
+{
+	"if":"and(not(contains($.ent,'16k')),not(contains($.ent,'8k')))",
+	"then":"$.ent=append($.ent,'_','16k')"
+}
+
+]
+`)
+	cmd,err:=CompileExpByJson(b)
+	if err !=nil{
+		panic(err)
+	}
+	fmt.Println("compiled ------")
+	for i:=0;i<100000;i++{
+		err = vm.CompliedExec(cmd)
+	}
+	fmt.Println(err)
+	fmt.Println(vm.Get("jsons"))
+	fmt.Println(vm.Get("jsonlen"))
+	fmt.Println(vm.Get("c"))
+	fmt.Println(vm.Get("a"))
+	fmt.Println(vm.Get("$"))
+
+}
+
+func TestOtto(t *testing.T)  {
+	var param = map[string]interface{}{
+		"name":"lixiang",
+		"age":1,
+		"desc":"",
+		"rate":"16000",
+		"ent":"sms",
+		"dfdf":map[string]interface{}{
+			"sdfds":"sdfsdfds",
+			"sdfdfs":"sdfsdfds",
+		},
+	}
+	vm:=otto.New()
+	vm.Set("$",param)
+	script,err:=vm.Compile("",`
+	str='16k,16000,8k,8000'
+	sp = str.split(',')
+	rate = $['rate']
+
+	if (rate===sp[0] || rate===sp[1] || rate===sp[2] || rate===sp[3]){
+		$['ent']=$['name']+'_'+rate
+		
+	}else{
+		
+	}
+	if (($['ent'].indexOf('8k')===-1)&&($['ent'].indexOf('16k')===-1)){
+		$['ent'] = $['ent']+'_'+'16k'
+	}else{
+		
+	}
+
+`)
+
+	if err !=nil{
+		panic(err)
+	}
+	for i:=0;i<100000;i++{
+
+		vm.Run(script)
+	}
+	fmt.Println(param)
+}
+
+func TestAndOp_Equal(t *testing.T) {
+	vm:=NewVm()
+	p:=map[string]interface{}{
+		"common":map[string]interface{}{
+			"appid":"1234561",
+		},
+		"data":map[string]interface{}{
+			"encoding":"d",
+		},
+	}
+	vm.Set("$",p)
+	err:=vm.ExecJson([]byte(`
+[
+  {
+    "if":"eq($.common.appid,'123456')",
+    "then":[
+      {
+        "if":"not(in($.data.encoding,'raw','opus-ogg','opus'))",
+        "then":"$.data.encoding=''"
+      }
+    ],
+	"else":"return(10001,sprintf('appid:%s is not a valid appid',$.common.appid))"
+  }
+]
+
+`))
+
+	fmt.Println(err)
+	fmt.Println(p)
 }
