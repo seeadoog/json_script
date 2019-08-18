@@ -64,12 +64,14 @@ type BoolExp struct {
 	Value Value
 }
 
-
-
-
 func (b *BoolExp)Match(ctx *Context)bool  {
 	return convertToBool(b.Value.Get(ctx))
 }
+
+//func (b *BoolExp)ExecJsonObject(ctx *Context)error{
+//
+//}
+
 
 func convertToBool(v interface{})bool  {
 	switch v.(type) {
@@ -88,6 +90,27 @@ func convertToBool(v interface{})bool  {
 	}
 	return false
 }
+
+
+
+type Exps []Exp
+
+func (es Exps)Exec(ctx *Context)error  {
+	for i:=0;i< len(es) ;i++{
+		err:=(es)[i].Exec(ctx)
+		if err !=nil{
+			return err
+		}
+	}
+	return nil
+}
+
+
+
+
+
+
+
 func parseBoolExp( s string)(*BoolExp  ,error){
 	v,err:=parseValue(s)
 	if err !=nil{
@@ -95,6 +118,26 @@ func parseBoolExp( s string)(*BoolExp  ,error){
 	}
 	return &BoolExp{Value:v},nil
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 type Expr interface {

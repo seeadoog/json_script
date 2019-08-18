@@ -3,7 +3,6 @@ package jsonscpt
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 )
 var (
 	systemId = map[string]int{
@@ -96,15 +95,15 @@ func (ctx *Context)Get(k string)interface{}  {
 	return v
 }
 
-func (ctx *Context)Exec(v interface{}) error {
+func (ctx *Context) ExecJsonObject(v interface{}) error {
 	//if stv,ok:=v.(string);ok{
 	//	json.Unmarshal([]byte(stv),&v)
 	//}
-	cpd,err:=ComplieExp(v)
+	cpd,err:= CompileExp(v)
 	if err !=nil{
 		return err
 	}
-	return ctx.CompliedExec(cpd)
+	return ctx.Execute(cpd)
 }
 func (ctx *Context)ExecJson(s []byte) error {
 	var i interface{}
@@ -112,55 +111,19 @@ func (ctx *Context)ExecJson(s []byte) error {
 	if err !=nil{
 		return err
 	}
-	return ctx.Exec(i)
+	return ctx.ExecJsonObject(i)
 }
 
-func (ctx *Context)CompliedExec(v interface{})error {
-	switch v.(type) {
-	case *IfExp:
-		ifexp:=v.(*IfExp)
-		if ifexp.If!=nil{
-			if ifexp.If.Match(ctx){
-
-				if err:=ctx.CompliedExec(ifexp.Then);err !=nil{
-					return err
-				}
-			}else{
-				if ifexp.Else==nil{
-					return nil
-				}
-				if err:=ctx.CompliedExec(ifexp.Else);err !=nil{
-					return err
-				}
-			}
-		}
-	case *SetExps:
-		setexp:=v.(*SetExps)
-		err:=setexp.Exec(ctx)
-		//fmt.Println(setexp.Variable,setexp.Value.Get(ctx))
-		if err !=nil{
-			return err
-		}
-	case []interface{}:
-		in:=v.([]interface{})
-		for _, vv := range in {
-			err:=ctx.CompliedExec(vv)
-			if err !=nil{
-				return err
-			}
-		}
-	default:
-		return errors.New("invalid complied type:"+fmt.Sprintf("%v",v))
-	}
-	return nil
+func (c *Context)Execute(exp Exp) error {
+	return exp.Exec(c)
 }
 
-func CompileExpByJson(b []byte)(interface{},error){
+func CompileExpByJson(b []byte)(Exp,error){
 	var i interface{}
 	if err:=json.Unmarshal(b,&i);err !=nil{
 		return nil,err
 	}
-	return ComplieExp(i)
+	return CompileExp(i)
 }
 
 func boolValid(s string) bool {
@@ -170,18 +133,31 @@ func boolValid(s string) bool {
 
 type IfExp struct {
 	If *BoolExp
-	Then interface{}
-	Else interface{}
+	Then Exp
+	Else Exp
 }
 
-//func (f *IfExp)Exec(ctx *Context)error{
-//	if f.If.Match(ctx){
-//
-//	}
-//}
+func (f *IfExp)Exec(ctx *Context)error{
+	if f.If.Match(ctx){
+		err:=f.Then.Exec(ctx)
+		if err !=nil{
+			return err
+		}
+	}else{
+		if f.Else!=nil{
+			err:=f.Else.Exec(ctx)
+			if err !=nil{
+				return err
+			}
+		}
+	}
+	return nil
+}
 
 
-func ComplieExp(v interface{}) (interface{},error) {
+
+
+func CompileExp(v interface{}) (Exp,error) {
 	if exp,ok:=v.(string);ok{
 		e,err:=parseSetExp(exp)
 		if err !=nil{
@@ -199,7 +175,7 @@ func ComplieExp(v interface{}) (interface{},error) {
 				return nil,err
 			}
 			if then,ok:=m["then"];ok && then !=nil {
-				var parsedExp,err = ComplieExp(then)
+				var parsedExp,err = CompileExp(then)
 				if err !=nil{
 					return nil,err
 				}
@@ -208,7 +184,7 @@ func ComplieExp(v interface{}) (interface{},error) {
 				return  nil,errors.New("line:"+ifexp+" has no then block")
 			}
 			if el,ok:=m["else"];ok && el !=nil{
-				var parsedExp,err = ComplieExp(el)
+				var parsedExp,err = CompileExp(el)
 				if err !=nil{
 					return nil,err
 				}
@@ -220,9 +196,9 @@ func ComplieExp(v interface{}) (interface{},error) {
 	}
 
 	if eps,ok:=v.([]interface{});ok {
-		var parsedExp = make([]interface{},0, len(eps))
+		var parsedExp = Exps{}
 		for i := 0; i < len(eps); i++ {
-			e,err:= ComplieExp(eps[i])
+			e,err:= CompileExp(eps[i])
 			if err !=nil{
 				return nil,err
 			}else{

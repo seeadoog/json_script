@@ -82,7 +82,7 @@ func TestParse(t*testing.T){
 `
 var m = map[string]interface{}{}
 json.Unmarshal([]byte(s),&m)
-//p,_:= ComplieExp(m)
+//p,_:= CompileExp(m)
 //fmt.Println(p.(*IfExp).Else[0].(*SetExps).Variable)
 //fmt.Println(p.(*IfExp).Else[1].(*SetExps).Variable)
 //fmt.Println(p.(*IfExp).Else[2].(*IfExp).Then[0].(*SetExps).Variable)
@@ -111,7 +111,7 @@ var s2 = `[
 ]`
 	var m interface{}
 	json.Unmarshal([]byte(s2),&m)
-	_,err:=ComplieExp(m)
+	_,err:= CompileExp(m)
 	if err !=nil{
 		panic(err)
 	}
@@ -122,13 +122,13 @@ var s2 = `[
 	for i:=0;i<10000;i++{
 		vm:=NewVm()
 		vm.Set("business",busi)
-		ComplieExp(m)
+		CompileExp(m)
 	}
 
 	fmt.Println(busi)
 	for i:=0;i<1;i++{
 		v2:=NewVm()
-		err=v2.Exec(`name""=5`)
+		err=v2.ExecJsonObject(`name""=5`)
 		fmt.Println("name=",err,v2.Get("name"))
 	}
 
@@ -137,30 +137,30 @@ var s2 = `[
 
 func TestExec(t *testing.T) {
 	vm:=NewVm()
-	//vm.Exec(`printf('%f %f %f %s',1,2,3,append(len(append('hello','world')),'nima'))`)
-	vm.Exec(`user.name='lixiang'`)
-	vm.Exec(`user.password='123456'`)
-	vm.Exec(`jsonStr=json_m(user)`)
-	vm.Exec("printf('%s',jsonStr)")
-	vm.Exec("array=split('1,2,3,4,5',',')")
-	vm.Exec("printf('%v',array)")
-	vm.Exec("printf('%s',array[0])")
+	//vm.ExecJsonObject(`printf('%f %f %f %s',1,2,3,append(len(append('hello','world')),'nima'))`)
+	vm.ExecJsonObject(`user.name='lixiang'`)
+	vm.ExecJsonObject(`user.password='123456'`)
+	vm.ExecJsonObject(`jsonStr=json_m(user)`)
+	vm.ExecJsonObject("printf('%s',jsonStr)")
+	vm.ExecJsonObject("array=split('1,2,3,4,5',',')")
+	vm.ExecJsonObject("printf('%v',array)")
+	vm.ExecJsonObject("printf('%s',array[0])")
 
-	vm.Exec("jsonpd=split(jsonStr,',')")
-	fmt.Println(vm.Exec("printf('%s',array[1])"))
-	fmt.Println(vm.Exec("printf('%v',jsonpd)"))
-	fmt.Println(vm.Exec("printf('len of splited array is %d',len(array))"))
+	vm.ExecJsonObject("jsonpd=split(jsonStr,',')")
+	fmt.Println(vm.ExecJsonObject("printf('%s',array[1])"))
+	fmt.Println(vm.ExecJsonObject("printf('%v',jsonpd)"))
+	fmt.Println(vm.ExecJsonObject("printf('len of splited array is %d',len(array))"))
 	vm.SetFunc("show", func(i ...interface{}) interface{} {
 		fmt.Println(i...)
 		return ""
 	})
-	vm.Exec("show('exec show function',1,2,3,4,5)")
-	vm.Exec("show(user)")
-	vm.Exec("key='name'")
-	vm.Exec("delete(user,key)")
-	vm.Exec("show(user)")
-	vm.Exec("show('nil value:',hal,isnil(user))")
-	vm.Exec("ar.len=len('123')")
+	vm.ExecJsonObject("show('exec show function',1,2,3,4,5)")
+	vm.ExecJsonObject("show(user)")
+	vm.ExecJsonObject("key='name'")
+	vm.ExecJsonObject("delete(user,key)")
+	vm.ExecJsonObject("show(user)")
+	vm.ExecJsonObject("show('nil value:',hal,isnil(user))")
+	vm.ExecJsonObject("ar.len=len('123')")
 	fmt.Println(vm.Get("ar"))
 
 }
@@ -234,13 +234,13 @@ func TestScript(t *testing.T) {
 
 	var i interface{}
 	json.Unmarshal(b,&i)
-	compiledCode,err:=ComplieExp(i)
+	compiledCode,err:= CompileExp(i)
 	if err !=nil{
 		panic(err)
 	}
 	for j:=0;j<1;j++{
-		//ComplieExp(i)
-		err = vm.CompliedExec(compiledCode)
+		//CompileExp(i)
+		err = vm.Execute(compiledCode)
 	}
 	fmt.Println(err)
 	fmt.Println(param)
@@ -304,7 +304,7 @@ func TestBenchMark2(t *testing.T)  {
 		panic(err)
 	}
 	for i:=0;i<1;i++{
-		vm.CompliedExec(cmd)
+		vm.Execute(cmd)
 	}
 	fmt.Println(vm.Get("param.desc"))
 }
@@ -367,7 +367,7 @@ func TestMarshal2(t *testing.T) {
 	}
 	fmt.Println("compiled ------")
 	for i:=0;i<100000;i++{
-		err = vm.CompliedExec(cmd)
+		err = vm.Execute(cmd)
 	}
 	fmt.Println(err)
 	fmt.Println(vm.Get("jsons"))
@@ -414,7 +414,7 @@ func TestOtto(t *testing.T)  {
 	if err !=nil{
 		panic(err)
 	}
-	for i:=0;i<100000;i++{
+	for i:=0;i<10000;i++{
 
 		vm.Run(script)
 	}
@@ -425,14 +425,14 @@ func TestAndOp_Equal(t *testing.T) {
 	vm:=NewVm()
 	p:=map[string]interface{}{
 		"common":map[string]interface{}{
-			"appid":"1234561",
+			"appid":"123456",
 		},
 		"data":map[string]interface{}{
-			"encoding":"d",
+			"encoding":"raw",
 		},
 	}
 	vm.Set("$",p)
-	err:=vm.ExecJson([]byte(`
+	b:=[]byte(`
 [
   {
     "if":"eq($.common.appid,'123456')",
@@ -446,8 +446,11 @@ func TestAndOp_Equal(t *testing.T) {
   }
 ]
 
-`))
-
-	fmt.Println(err)
+`)
+	exp,err:=CompileExpByJson(b)
+	if err !=nil{
+		panic(err)
+	}
+	fmt.Println(exp.Exec(vm))
 	fmt.Println(p)
 }
