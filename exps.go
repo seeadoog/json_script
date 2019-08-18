@@ -125,7 +125,7 @@ func convertToBool(v interface{})bool  {
 }
 
 
-
+// a collection of exps
 type Exps []Exp
 
 func (es Exps)Exec(ctx *Context)error  {

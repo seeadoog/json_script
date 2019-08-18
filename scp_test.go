@@ -365,15 +365,16 @@ func TestMarshal2(t *testing.T) {
 			"else":"print('idx is =',index(str,idx))"
 		},
 		"idx=add(idx,1)"
-		
 	]
 }
 ]
 `)
+	var ii interface{}
+	fmt.Println(json.Unmarshal(b,&ii))
 	cmd,err:= CompileExpFromJson(b)
 	if err !=nil{
 		panic(err)
-	}
+}
 	fmt.Println("compiled ------")
 	for i:=0;i<1;i++{
 		err = vm.Execute(cmd)

@@ -20,3 +20,8 @@ type BreakError struct {
 func (e *BreakError)Error()string  {
 	return "break"
 }
+
+func IsReturnError(err error)(e *ErrorReturn,ok bool ) {
+	e,ok =err.(*ErrorReturn)
+	return
+}
