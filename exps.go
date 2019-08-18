@@ -125,6 +125,24 @@ func convertToBool(v interface{})bool  {
 }
 
 
+type IfExp struct {
+	If *BoolValue
+	Then Exp
+	Else Exp
+}
+
+func (f *IfExp)Exec(ctx *Context)error{
+	if f.If.Match(ctx){
+		return f.Then.Exec(ctx)
+
+	}else{
+		if f.Else!=nil{
+			return  f.Else.Exec(ctx)
+		}
+	}
+	return nil
+}
+
 // a collection of exps
 type Exps []Exp
 

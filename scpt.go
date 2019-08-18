@@ -134,29 +134,6 @@ func boolValid(s string) bool {
 }
 
 
-type IfExp struct {
-	If *BoolValue
-	Then Exp
-	Else Exp
-}
-
-func (f *IfExp)Exec(ctx *Context)error{
-	if f.If.Match(ctx){
-		err:=f.Then.Exec(ctx)
-		if err !=nil{
-			return err
-		}
-	}else{
-		if f.Else!=nil{
-			err:=f.Else.Exec(ctx)
-			if err !=nil{
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 
 
 
