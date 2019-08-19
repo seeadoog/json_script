@@ -58,9 +58,7 @@ var split Func = func(i ...interface{}) interface{} {
 var add Func = func(i ...interface{}) interface{} {
 	var sum  float64 = 0
 	for _, v := range i {
-		if fl,ok:=v.(float64);ok{
-			sum+=fl
-		}
+		sum+=number(v)
 	}
 	return sum
 }
@@ -158,6 +156,7 @@ var not Func = func(i ...interface{}) interface{} {
 // >
 var gt Func = func(i ...interface{}) interface{} {
 	if len(i)>=2{
+		//fmt.Println(number(i[0]),number(i[1]),number(i[0])>number(i[1]))
 		return number(i[0])>number(i[1])
 	}
 return false
@@ -193,7 +192,22 @@ var ret Func = func(i ...interface{}) interface{} {
 	}
 	return &ErrorReturn{}
 }
-
+var join Func = func(i ...interface{}) interface{} {
+	if len(i)>1{
+		var sp = ConvertToString(i[len(i)-1])
+		var joined = make([]string,0, len(i))
+		for k:=0;k< len(i)-1;k++{
+			switch i[k].(type) {
+			case []string:
+				joined = append(joined,i[k].([]string)...)
+			default:
+				joined = append(joined,ConvertToString(i[k]))
+			}
+		}
+		return strings.Join(joined,sp)
+	}
+	return ""
+}
 var contains Func = func(i ...interface{}) interface{} {
 	if len(i)<2{
 		return false
@@ -247,6 +261,18 @@ var index Func = func(i ...interface{}) interface{} {
 		return i[0].([]int)[int(number(i[1]))]
 	case []interface{}:
 		return i[0].([]interface{})[int(number(i[1]))]
+	}
+	return nil
+}
+
+var set Func = func(i ...interface{}) interface{} {
+	if len(i)>2{
+		switch i[0].(type) {
+		case map[string]interface{}:
+			i[0].(map[string]interface{})[ConvertToString(i[1])]=i[2]
+		case map[string]string:
+			i[0].(map[string]string)[ConvertToString(i[1])]=ConvertToString(i[2])
+		}
 	}
 	return nil
 }

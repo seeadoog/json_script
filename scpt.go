@@ -31,6 +31,8 @@ var (
 		"in":1,
 		"contains":1,
 		"index":1,
+		"join":1,
+		"set":1,
 	}
 )
 
@@ -76,7 +78,9 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("return", ret)
 	ctx.SetFunc("in", in)
 	ctx.SetFunc("contains", contains)
+	ctx.SetFunc("join", join)
 	ctx.SetFunc("index", index)
+	ctx.SetFunc("set", set)
 
 
 }
@@ -166,7 +170,7 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 				}
 				exp.Then = parsedExp
 			}else{
-				return  nil,errors.New("line:"+ifexp+" has no then block")
+				//return  nil,errors.New("line:"+ifexp+" has no then block")
 			}
 			if el,ok:=m["else"];ok && el !=nil{
 				var parsedExp,err = CompileExpFromJsonObject(el)
@@ -193,6 +197,11 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 				return nil,errors.New("for do is nil")
 			}
 			return exp,nil
+		}else if data,ok:=m["data"];ok{
+			return &DataExp{
+				Key:ConvertToString(m["key"]),
+				Data:data,
+			},nil
 		}
 
 		return nil,errors.New("invalid object:"+fmt.Sprintf("%v",v))

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"fmt"
 	"encoding/json"
+	"time"
 )
 
 func TestCachedJsonpathLookUp(t *testing.T) {
@@ -332,6 +333,10 @@ func TestMarshal2(t *testing.T) {
 		"age":1,
 		"desc":"",
 		"rate":"16000",
+		"lan":"1",
+		"domain":"iat",
+		"accent":"ma",
+		"ent":"3",
 		"auth.auth_id":"llliuyu",
 		"array":[]int{1,2,3,4},
 		"dfdf":map[string]interface{}{
@@ -342,6 +347,7 @@ func TestMarshal2(t *testing.T) {
 
 	vm:=NewVm()
 	vm.Set("$",param)
+	vm.Set("tmp_ent","sms16k")
 	var b = []byte(`
 [
 "str='16k,16000,8k,8000'",
@@ -369,6 +375,32 @@ func TestMarshal2(t *testing.T) {
 }
 ]
 `)
+	b = []byte(`
+[
+{
+	"if":"not(and($.lan,$.domain,$.accent,$.rate))",
+	"then":"return(10303,'param convert error')"
+},
+"param_merged=join($.lan,$.domain,$.accent,$.rate,'_')",
+{
+	"if":"isnil($.ent)",
+	"then":"return(10303,'param ent is required')",
+	"else":"$.ent=tmp_ent"
+},
+"i=0",
+{
+	"for":"true",
+	"do":[
+		"print('i is ',i)",
+		"i=add(i,1)",
+		{
+			"if":"ge(i,100)",
+			"then":["print('------------')","break"]
+		}
+	]
+}
+]
+`)
 	var ii interface{}
 	fmt.Println(json.Unmarshal(b,&ii))
 	cmd,err:= CompileExpFromJson(b)
@@ -376,15 +408,18 @@ func TestMarshal2(t *testing.T) {
 		panic(err)
 }
 	fmt.Println("compiled ------")
+	//vm.Execute(cmd)
 	for i:=0;i<1;i++{
 		err = vm.Execute(cmd)
+		//strings.Split("12345,5654,6546,6546,456",",")
 	}
 	fmt.Println(err)
 	fmt.Println(vm.Get("jsons"))
 	fmt.Println(vm.Get("jsonlen"))
 	fmt.Println(vm.Get("c"))
-	fmt.Println(vm.Get("a"))
+	fmt.Println(vm.Get("param_merged"))
 	fmt.Println(vm.Get("$"))
+	fmt.Println(vm.Get("str"))
 
 }
 
@@ -402,21 +437,13 @@ func TestOtto(t *testing.T)  {
 	}
 	vm:=otto.New()
 	vm.Set("$",param)
-	script,err:=vm.Compile("",`
+	_,err:=vm.Compile("",`
 	str='16k,16000,8k,8000'
 	sp = str.split(',')
 	rate = $['rate']
 
-	if (rate===sp[0] || rate===sp[1] || rate===sp[2] || rate===sp[3]){
-		$['ent']=$['name']+'_'+rate
-		
-	}else{
-		
-	}
-	if (($['ent'].indexOf('8k')===-1)&&($['ent'].indexOf('16k')===-1)){
-		$['ent'] = $['ent']+'_'+'16k'
-	}else{
-		
+	for(i=0;i<1000000;){
+		i=i+1
 	}
 
 `)
@@ -424,10 +451,12 @@ func TestOtto(t *testing.T)  {
 	if err !=nil{
 		panic(err)
 	}
-	for i:=0;i<10000;i++{
+	start:=time.Now()
+	for i:=0;i<1000000;i++{
 
-		vm.Run(script)
+		//vm.Run(script)
 	}
+	fmt.Println("cost",time.Since(start))
 	fmt.Println(param)
 }
 

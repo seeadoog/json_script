@@ -57,6 +57,18 @@ func (v *FuncValue)GetName()string  {
 	return v.FuncName
 }
 
+type RootValue struct {
+
+}
+
+func (v *RootValue) Get(ctx *Context) interface{} {
+
+	return ctx.table
+}
+func (v *RootValue)GetName()string  {
+	return "$root"
+}
+
 var funv = regexp.MustCompile(`(\w+)\((.+)*\)$`)
 func parseValue(s string) (Value,error) {
 	s = strings.Trim(s," ")
@@ -152,7 +164,9 @@ func parseValue(s string) (Value,error) {
 		return nil,errors.New("invalid variable key:"+s)
 	}
 	//fmt.Println(s)
-
+	if s=="$root"{
+		//todo
+	}
 	return &VarValue{Key:s},nil
 //	return nil, nil
 }

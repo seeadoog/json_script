@@ -3,28 +3,34 @@ package jsonscpt
 import (
 	"errors"
 	"unsafe"
+	"strings"
 )
 
 type Exp interface  {
 	Exec(ctx *Context)error
 }
 //add ( 1 , len ( 'd' ) )
-func parseSetExp(s string)(*SetExps, error){
+
+func trimspace(s string)string  {
+	return strings.Trim(s," ")
+}
+func parseSetExp(s string)(Exp, error){
 	v,err:=splitSetExp(s)
 	if err !=nil{
 		return nil,err
 	}
 	if len(v)!=2{
 		if len(v)==1{
-			val,err:=parseValue(v[0])
+			val,err:=parseValue(trimspace(v[0]))
 			if err !=nil{
 				return nil,err
 			}
-			return &SetExps{Variable:"_",Value:val},nil
+			return &FuncExp{Value:val},nil
 		}
 		return nil,errors.New("invalid set exp:"+s)
 	}
-
+	v[0] =trimspace(v[0])
+	v[1] =trimspace(v[1])
 	if !checkRule(v[0]){
 		return nil,errors.New("invalid setexp key:"+v[0])
 	}
@@ -133,8 +139,10 @@ type IfExp struct {
 
 func (f *IfExp)Exec(ctx *Context)error{
 	if f.If.Match(ctx){
-		return f.Then.Exec(ctx)
-
+		if f.Then !=nil{
+			return f.Then.Exec(ctx)
+		}
+		return nil
 	}else{
 		if f.Else!=nil{
 			return  f.Else.Exec(ctx)
@@ -186,6 +194,26 @@ func (b *BreakExp)Exec(ctx *Context)error  {
 }
 
 
+
+type DataExp struct {
+	Data interface{}
+	Key string
+}
+
+func (b *DataExp)Exec(ctx *Context)error  {
+	ctx.table[b.Key] = b.Data
+	return nil
+}
+//执行函数
+type FuncExp struct{
+	Value Value
+}
+func (b *FuncExp)Exec(ctx *Context)error  {
+	b.Value.Get(ctx)
+	return nil
+}
+
+//////
 func parseBoolExp( s string)(*BoolValue,error){
 	v,err:=parseValue(s)
 	if err !=nil{
@@ -194,7 +222,7 @@ func parseBoolExp( s string)(*BoolValue,error){
 	return &BoolValue{Value: v},nil
 }
 
-
+/////
 type Expr interface {
 	Match() bool
 }
@@ -202,6 +230,8 @@ type Expr interface {
 type Op interface {
 	Equal(x,y Value,ctx *Context)bool
 }
+
+
 
 //type BoolValue struct {
 //	X Value
