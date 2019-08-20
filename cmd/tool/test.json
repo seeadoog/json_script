@@ -1,27 +1,5 @@
 [
-  {
-    "data": [
-      {
-        "name": "lixiang",
-        "age": 15
-      },
-      {
-        "name": "lifangzuo",
-        "age": 18
-      }
-    ],
-    "key": "$"
-  },
-  "print('hello world')",
-  "i = 0",
-  {
-    "for": "lt(i,len($))",
-    "do": [
-      "p=index($,i)",
-      "print(i,'name=',p.name)",
-      "print(i,'age=',p.age)",
-      "i=add(i,1)"
-    ]
-  },
-  "i=add(i,1)"
+  "a=input()",
+  "b=input()",
+  "printf('%v + %v = %v',a,b,add(a,b))"
 ]
