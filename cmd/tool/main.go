@@ -1,16 +1,32 @@
 package main
 
 import (
-	"git.xfyun.cn/AIaaS/json_script"
+	"bufio"
 	"flag"
-	"io/ioutil"
 	"fmt"
+	"git.xfyun.cn/AIaaS/json_script"
+	"io/ioutil"
+	"os"
 	"time"
 )
-var file = flag.String("f","input.json","")
+var file = flag.String("f","","")
 func main(){
 	flag.Parse()
 	vm:=jsonscpt.NewVm()
+	if *file==""{
+		sc:=bufio.NewScanner(os.Stdin)
+		for sc.Scan(){
+			func (){
+				defer func() {
+					if err := recover();err !=nil{
+						fmt.Println(err)
+					}
+				}()
+				vm.ExecJsonObject(vm.ExecJsonObject(sc.Text()))
+			}()
+		}
+		return
+	}
 	b,err:=ioutil.ReadFile(*file)
 	if err !=nil{
 		fmt.Println(err.Error())
@@ -22,9 +38,14 @@ func main(){
 		return
 	}
 	start:=time.Now()
-	if err:=vm.Execute(cmd);err !=nil{
-		fmt.Println(err)
+	for i:=0;i<1;i++{
+		if err:=vm.SafeExecute(cmd, func(err interface{}) {
+			fmt.Println(err)
+		});err !=nil{
+			fmt.Println(err)
+		}
 	}
+
 	fmt.Println("total cost=>",time.Since(start))
 
 }

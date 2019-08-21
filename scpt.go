@@ -261,7 +261,7 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 			}
 			return &GoFunc{Exp:exp},nil
 		}else if fun,ok:=m["func"].(string);ok{
-			if params,ok:=m["do"].([]interface{});ok{
+			if params,ok:=m["do"];ok{
 				return parseFunc(fun,params)
 			}
 		}
@@ -284,7 +284,7 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 
 	return nil,errors.New("invalid exp:"+ConvertToString(v))
 }
-var funcReg = regexp.MustCompile(`(\w+)\((.+)\)`)
+var funcReg = regexp.MustCompile(`(\w+)\((.*)\)`)
 func parseFunc(s string,body interface{})(Exp,error){
 	if !funcReg.MatchString(s){
 		return nil, errors.New("invalid func define:" + s)
@@ -301,6 +301,9 @@ func parseFunc(s string,body interface{})(Exp,error){
 			var params []string
 			if len(v[2])>0{
 				params = strings.Split(v[2],",")
+				for i:=0;i< len(params);i++{
+					params[i] = strings.Trim(params[i]," ")
+				}
 			}
 			fd:=&FuncDefine{
 				FuncName:fun,

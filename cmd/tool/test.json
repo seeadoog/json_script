@@ -7,7 +7,7 @@
   },
   "a=5",
   "b=6",
-  "printf('%v + %v = %v',a,b,addfunc(a,b))",
+  "append('%v + %v = %v',a,b,addfunc(a,b))",
   {
     "func": "show_user(show_user_1)",
     "do": [
@@ -16,7 +16,7 @@
         "then": "show_user_old='old'",
         "else": "show_user_old='yong'"
       },
-      "printf('user.name=%s,user.age=%v,is a %s man',show_user_1.name,show_user_1.age,show_user_old)"
+      "append('user.name=%s,user.age=%v,is a %s man',show_user_1.name,show_user_1.age,show_user_old)"
     ]
   },
   {
@@ -49,7 +49,7 @@
   },
   {
     "for":"k,v  in  split('1,2,3,4,5',',')",
-    "do":"print(k,v,addfunc(k,v))"
+    "do":"append(k,v,addfunc(k,v))"
   },
   {
     "func":"addtest(n)",
@@ -61,5 +61,10 @@
       }
     ]
   },
-  "print(addtest(1))"
+  "append(addtest(1))",
+  {
+    "func":"sayHello()",
+    "do":"append('hello world')"
+  },
+  "sayHello()"
 ]
