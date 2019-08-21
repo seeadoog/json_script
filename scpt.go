@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 )
 var (
 	systemId = map[string]int{
@@ -30,8 +32,8 @@ var (
 		"return":1,
 		"in":1,
 		"contains":1,
-		"index":1,
 		"join":1,
+		"get":1,
 		"set":1,
 	}
 )
@@ -79,8 +81,9 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("in", in)
 	ctx.SetFunc("contains", contains)
 	ctx.SetFunc("join", join)
-	ctx.SetFunc("index", index)
 	ctx.SetFunc("set", set)
+	ctx.SetFunc("get", get)
+	ctx.SetFunc("input", input)
 
 
 }
@@ -90,7 +93,7 @@ func (ctx *Context)Func(name string,params ...interface{})  {
 }
 
 func (ctx *Context)SetFunc(name string,value Func)  {
-	ctx.Set(name,value)
+	ctx.table[name] = value
 }
 
 func (ctx *Context)Set(k string,v interface{})  {
@@ -122,6 +125,17 @@ func (ctx *Context)ExecJson(s []byte) error {
 }
 
 func (c *Context)Execute(exp Exp) error {
+	return exp.Exec(c)
+}
+
+func (c *Context)SafeExecute(exp Exp, fatalHandler func(err interface{})) error {
+	defer func() {
+		if err := recover();err !=nil{
+			if fatalHandler !=nil{
+				fatalHandler(err)
+			}
+		}
+	}()
 	return exp.Exec(c)
 }
 
@@ -181,27 +195,75 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 			}
 			return exp,nil
 		}else if forexp,ok:=m["for"].(string);ok{  //parse for
-			exp:=&ForExp{}
-			efe,err:=parseBoolExp(forexp);
-			if err !=nil{
-				return nil,err
-			}
-			exp.Addtion = efe
-			if do,ok:=m["do"];ok && do !=nil{
-				blexp,err:=CompileExpFromJsonObject(do)
+
+			if forrangeReg.MatchString(forexp){ // for range
+				r:=forrangeReg.FindAllStringSubmatch(forexp,-1)
+				if len(r)>0{
+					if len(r[0])>3{
+						key:=r[0][1]
+						val:=r[0][2]
+						if isSystemId(key){
+							return nil,errors.New("system id cannot be variable:"+key)
+						}
+						if isSystemId(val){
+							return nil,errors.New("system id cannot be variable:"+val)
+						}
+						forVal:=r[0][3]
+						parsedForValue,err:=parseValue(forVal)
+						if err !=nil{
+							return nil,err
+						}
+						do,err:=CompileExpFromJsonObject(m["do"])
+						if err !=nil{
+							return nil,err
+						}
+						r:=&ForRangeExp{
+							Value:parsedForValue,
+							Do:do,
+							SubIdx:key,
+							SubValue:val,
+						}
+						return r,nil
+					}
+				}
+				return nil,errors.New("invalid for range exp"+ConvertToString(v))
+
+			}else{  // for bool
+				exp:=&ForExp{}
+				efe,err:=parseBoolExp(forexp);
 				if err !=nil{
 					return nil,err
 				}
-				exp.Do = blexp
-			}else{
-				return nil,errors.New("for do is nil")
+				exp.Addtion = efe
+				if do,ok:=m["do"];ok && do !=nil{
+					blexp,err:=CompileExpFromJsonObject(do)
+					if err !=nil{
+						return nil,err
+					}
+					exp.Do = blexp
+				}else{
+					return nil,errors.New("for do is nil")
+				}
+				return exp,nil
 			}
-			return exp,nil
+
+
 		}else if data,ok:=m["data"];ok{
 			return &DataExp{
 				Key:ConvertToString(m["key"]),
 				Data:data,
 			},nil
+		}else if gofun,ok:=m["go"];ok{
+
+			exp,err:=CompileExpFromJsonObject(gofun)
+			if err !=nil{
+				return nil,err
+			}
+			return &GoFunc{Exp:exp},nil
+		}else if fun,ok:=m["func"].(string);ok{
+			if params,ok:=m["do"].([]interface{});ok{
+				return parseFunc(fun,params)
+			}
 		}
 
 		return nil,errors.New("invalid object:"+fmt.Sprintf("%v",v))
@@ -220,7 +282,35 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 		return parsedExp,nil
 	}
 
-	return nil,nil
+	return nil,errors.New("invalid exp:"+ConvertToString(v))
 }
+var funcReg = regexp.MustCompile(`(\w+)\((.+)\)`)
+func parseFunc(s string,body interface{})(Exp,error){
+	if !funcReg.MatchString(s){
+		return nil, errors.New("invalid func define:" + s)
+	}
+	r:=funcReg.FindAllStringSubmatch(s,-1)
+	if len(r)>0{
+		v:=r[0]
+		if len(v)>=2{
+			fun:=v[1]
+			do,err:=CompileExpFromJsonObject(body)
+			if err !=nil{
+				return nil, err
+			}
+			var params []string
+			if len(v[2])>0{
+				params = strings.Split(v[2],",")
+			}
+			fd:=&FuncDefine{
+				FuncName:fun,
+				Params:params,
+				Body:do,
+			}
+			return fd, nil
 
+		}
+	}
+	return nil, nil
+}
 

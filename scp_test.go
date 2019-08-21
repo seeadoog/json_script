@@ -464,7 +464,7 @@ func TestAndOp_Equal(t *testing.T) {
 	vm:=NewVm()
 	p:=map[string]interface{}{
 		"common":map[string]interface{}{
-			"appid":"123456",
+			"appid":"1234561",
 		},
 		"data":map[string]interface{}{
 			"encoding":"raw",
@@ -495,5 +495,7 @@ func TestAndOp_Equal(t *testing.T) {
 }
 
 func TestSwitchJson(t *testing.T) {
-	fmt.Println(splitSetExp("a=ent('a=b')"))
+fmt.Println(funcReg.MatchString("avcsdf_dsf(a,b,cd)"))
+r:=funcReg.FindAllStringSubmatch("avcsdf_dsf(a,b,cd)",-1)
+fmt.Println(r[0][2:])
 }

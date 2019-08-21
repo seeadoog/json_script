@@ -2,8 +2,9 @@ package jsonscpt
 
 import (
 	"errors"
-	"unsafe"
+	"regexp"
 	"strings"
+	"unsafe"
 )
 
 type Exp interface  {
@@ -86,15 +87,11 @@ type SetExps struct{
 }
 
 func (e *SetExps)Exec(ctx *Context)error{
-	if fv,ok:=e.Value.(*FuncValue);ok{
-		if fv.FuncName=="return"{
-			err:=e.Value.Get(ctx)
-			if re,ok:=err.(*ErrorReturn);ok{
-				return re
-			}
-		}
+	v:=e.Value.Get(ctx)
+	if err,ok:=IsReturnErrorI(v);ok{
+		return err
 	}
-	return MarshalInterface(e.Variable,ctx.table,e.Value.Get(ctx))
+	return MarshalInterface(e.Variable,ctx.table,v)
 }
 //a>b && (c>d)
 type BoolValue struct {
@@ -208,8 +205,133 @@ func (b *DataExp)Exec(ctx *Context)error  {
 type FuncExp struct{
 	Value Value
 }
-func (b *FuncExp)Exec(ctx *Context)error  {
-	b.Value.Get(ctx)
+func (e *FuncExp)Exec(ctx *Context)error  {
+	if fv,ok:=e.Value.(*FuncValue);ok{
+		if fv.FuncName=="return"{
+			err:=e.Value.Get(ctx)
+			if re,ok:=err.(*ErrorReturn);ok{
+				return re
+			}
+		}
+	}
+	e.Value.Get(ctx)
+	//if e,ok:=IsReturnErrorI(err);ok{
+	//	if e.Code < 0{
+	//		return e
+	//	}
+	//}
+	return nil
+}
+
+type GoFunc struct {
+	Exp Exp
+}
+
+func (b *GoFunc)Exec(ctx *Context)error  {
+	go b.Exp.Exec(ctx)
+	return nil
+}
+
+type FuncDefine struct {
+	FuncName string
+	Params []string
+	Body Exp
+}
+
+func (b *FuncDefine)Exec(ctx *Context)error  {
+
+	var f Func = func(i ...interface{}) interface{}{
+		for k,v := range i {
+			if k< len(b.Params){
+				ctx.Set(b.Params[k],v)
+			}
+		}
+		err:=b.Body.Exec(ctx)
+
+		if err !=nil{
+			if err,ok:=IsReturnError(err);ok{
+				return err.Value
+			}
+			return err
+		}
+
+		return nil
+	}
+	ctx.table[b.FuncName] = f
+	return nil
+}
+
+var forrangeReg = regexp.MustCompile(`(\w+),(\w+)\s+in\s+(.+)`)
+type ForRangeExp struct {
+	Value Value
+	Do Exp
+	SubIdx string
+	SubValue string
+}
+func (b *ForRangeExp)Exec(ctx *Context)error  {
+	val:=b.Value.Get(ctx)
+	switch val.(type) {
+	case []interface{}:
+		for k,v:=range val.([]interface{}){
+			ctx.Set(b.SubIdx,k)
+			ctx.Set(b.SubValue,v)
+			err:=b.Do.Exec(ctx)
+			if err !=nil{
+				if err == breakError{
+					break
+				}
+				return err
+			}
+		}
+	case map[string]interface{}:
+		for k,v:=range val.(map[string]interface{}){
+			ctx.Set(b.SubIdx,k)
+			ctx.Set(b.SubValue,v)
+			err:=b.Do.Exec(ctx)
+			if err !=nil{
+				if err == breakError{
+					break
+				}
+				return err
+			}
+		}
+	case []string:
+		for k,v:=range val.([]string){
+			ctx.Set(b.SubIdx,k)
+			ctx.Set(b.SubValue,v)
+			err:=b.Do.Exec(ctx)
+			if err !=nil{
+				if err == breakError{
+					break
+				}
+				return err
+			}
+		}
+	case []float64:
+		for k,v:=range val.([]float64){
+			ctx.Set(b.SubIdx,k)
+			ctx.Set(b.SubValue,v)
+			err:=b.Do.Exec(ctx)
+			if err !=nil{
+				if err == breakError{
+					break
+				}
+				return err
+			}
+		}
+	case []int:
+		for k,v:=range val.([]int){
+			ctx.Set(b.SubIdx,k)
+			ctx.Set(b.SubValue,v)
+			err:=b.Do.Exec(ctx)
+			if err !=nil{
+				if err == breakError{
+					break
+				}
+				return err
+			}
+		}
+	}
 	return nil
 }
 

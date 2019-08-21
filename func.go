@@ -10,7 +10,7 @@ import (
 
 type Func func(...interface{})interface{}
 //get len of string
-var lens Func = func(i ...interface{}) interface{} {
+func lens(i ...interface{}) interface{} {
 	if len(i)==0{
 		return 0
 	}
@@ -30,7 +30,7 @@ var lens Func = func(i ...interface{}) interface{} {
 	}
 }
 // append string and number
-var apd Func = func(i ...interface{}) interface{} {
+func apd(i ...interface{}) interface{} {
 	var bf bytes.Buffer
 	for _, v := range i {
 		bf.WriteString(ConvertToString(v))
@@ -184,12 +184,16 @@ var le Func = func(i ...interface{}) interface{} {
 }
 //return
 var ret Func = func(i ...interface{}) interface{} {
+	if len(i)>=3{
+		return &ErrorReturn{Code:int(number(i[0])),Message:ConvertToString(i[1]),Value:i[2]}
+	}
 	if len(i)>=2{
 		return &ErrorReturn{Code:int(number(i[0])),Message:ConvertToString(i[1])}
 	}
 	if len(i)>=1{
 		return &ErrorReturn{Code:int(number(i[0]))}
 	}
+
 	return &ErrorReturn{}
 }
 var join Func = func(i ...interface{}) interface{} {
@@ -276,6 +280,35 @@ var set Func = func(i ...interface{}) interface{} {
 	}
 	return nil
 }
+//get the value of map or array
+var get Func  = func(i ...interface{}) interface{} {
+	if len(i)>1{
+		key :=ConvertToString(i[1])
+		switch i[0].(type) {
+		case map[string]interface{}:
+			return i[0].(map[string]interface{})[key]
+		case map[string]string:
+			return i[0].(map[string]string)[key]
+		case []interface{}:
+			return i[0].([]interface{})[int(number(key))]
+		case []string:
+			return i[0].([]string)[int(number(key))]
+		case []int:
+			return i[0].([]int)[int(number(i[1]))]
+
+		}
+	}
+	return nil
+}
+
+var input Func = func(i ...interface{}) interface{} {
+	var s string
+	fmt.Scanf("%s",&s)
+	return s
+}
+
+
+
 func number(i interface{})  float64{
 	switch i.(type) {
 	case float64:
@@ -286,6 +319,9 @@ func number(i interface{})  float64{
 		return float64(i.(int32))
 	case int64:
 		return float64(i.(int64))
+	case string:
+		 n,_:=strconv.Atoi(i.(string))
+		 return float64(n)
 	}
 	return 0
 }
