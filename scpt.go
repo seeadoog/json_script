@@ -68,7 +68,6 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("print",printlnn)
 	ctx.SetFunc("sprintf",sprintf)
 	ctx.SetFunc("add",add)
-	ctx.SetFunc("json_m", jsonMarshal)
 	ctx.SetFunc("delete", deleteFun)
 	ctx.SetFunc("isnil", isNil)
 	ctx.SetFunc("and", and)
