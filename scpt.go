@@ -35,6 +35,8 @@ var (
 		"join":1,
 		"get":1,
 		"set":1,
+		"exit":1,
+		"trim":1,
 	}
 )
 
@@ -78,12 +80,14 @@ func (ctx *Context)init()  {
 	ctx.SetFunc("lt", lt)
 	ctx.SetFunc("not", not)
 	ctx.SetFunc("return", ret)
+	ctx.SetFunc("exit", exit)
 	ctx.SetFunc("in", in)
 	ctx.SetFunc("contains", contains)
 	ctx.SetFunc("join", join)
 	ctx.SetFunc("set", set)
 	ctx.SetFunc("get", get)
 	ctx.SetFunc("input", input)
+	ctx.SetFunc("trim", trim)
 
 
 }
@@ -294,6 +298,9 @@ func parseFunc(s string,body interface{})(Exp,error){
 		v:=r[0]
 		if len(v)>=2{
 			fun:=v[1]
+			if isSystemId(fun){
+				return nil, errors.New("variable cannot be system Id"+fun)
+			}
 			do,err:=CompileExpFromJsonObject(body)
 			if err !=nil{
 				return nil, err
@@ -303,6 +310,9 @@ func parseFunc(s string,body interface{})(Exp,error){
 				params = strings.Split(v[2],",")
 				for i:=0;i< len(params);i++{
 					params[i] = strings.Trim(params[i]," ")
+					if isSystemId(params[i]){
+						return nil, errors.New("variable cannot be system Id"+params[i])
+					}
 				}
 			}
 			fd:=&FuncDefine{

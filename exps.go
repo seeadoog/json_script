@@ -28,7 +28,7 @@ func parseSetExp(s string)(Exp, error){
 			}
 			return &FuncExp{Value:val},nil
 		}
-		return nil,errors.New("invalid set exp:"+s)
+		return nil,errors.New("invalid set exp:"+s+" len:"+ConvertToString(len(v)))
 	}
 	v[0] =trimspace(v[0])
 	v[1] =trimspace(v[1])
@@ -49,18 +49,33 @@ func splitSetExp(s string)([]string,error)  {
 	var tokens = []string{}
 	var token = make([]byte,0, len(s))
 	cs:=0
+	bl:=0
 	for i:=0;i< len(s);i++{
 		v:=s[i]
 		token = append(token,v)
-		if v== '\'' && cs == 0{
-			cs = 1
+		if v !='\'' && cs ==1{
 			continue
 		}
-		if v=='\'' && cs ==1{
-			cs=0
+		if v=='\'' && cs==0{
+			cs=1
 			continue
 		}
-		if v=='=' && cs == 0 {
+		if v=='\'' && cs== 1{
+			cs = 0
+			continue
+		}
+		if v=='('{
+			bl++
+			continue
+		}
+		if v==')'{
+			if bl<=0{
+				return nil, errors.New("invalid eq exp" + s)
+			}
+			bl --
+			continue
+		}
+		if v=='=' && cs == 0  && bl == 0{
 			if len(token)<1{
 				return nil,errors.New("invalid set token:"+s)
 			}
@@ -69,7 +84,7 @@ func splitSetExp(s string)([]string,error)  {
 		}
 	}
 	if cs==1{
-		return nil,errors.New("invalid set exp:"+s)
+		return nil,errors.New("invalid sets exp:"+s)
 	}
 	if len(token)>0{
 		tokens = append(tokens,string(token))
@@ -88,7 +103,7 @@ type SetExps struct{
 
 func (e *SetExps)Exec(ctx *Context)error{
 	v:=e.Value.Get(ctx)
-	if err,ok:=IsReturnErrorI(v);ok{
+	if err,ok:= IsExitErrorI(v);ok{
 		return err
 	}
 	return MarshalInterface(e.Variable,ctx.table,v)
@@ -206,16 +221,13 @@ type FuncExp struct{
 	Value Value
 }
 func (e *FuncExp)Exec(ctx *Context)error  {
-	if fv,ok:=e.Value.(*FuncValue);ok{
-		if fv.FuncName=="return"{
-			err:=e.Value.Get(ctx)
-			if re,ok:=err.(*ErrorReturn);ok{
-				return re
-			}
-		}
+	err:=e.Value.Get(ctx)
+	if errr,ok:=err.(error);ok{
+
+		return errr
 	}
-	e.Value.Get(ctx)
-	//if e,ok:=IsReturnErrorI(err);ok{
+
+	//if e,ok:=IsExitErrorI(err);ok{
 	//	if e.Code < 0{
 	//		return e
 	//	}
@@ -247,9 +259,9 @@ func (b *FuncDefine)Exec(ctx *Context)error  {
 			}
 		}
 		err:=b.Body.Exec(ctx)
-
+		//return 语句返回的值
 		if err !=nil{
-			if err,ok:=IsReturnError(err);ok{
+			if err,ok:= IsReturnError(err);ok {
 				return err.Value
 			}
 			return err
@@ -273,8 +285,8 @@ func (b *ForRangeExp)Exec(ctx *Context)error  {
 	switch val.(type) {
 	case []interface{}:
 		for k,v:=range val.([]interface{}){
-			ctx.Set(b.SubIdx,k)
-			ctx.Set(b.SubValue,v)
+			ctx.table[b.SubIdx]=k
+			ctx.table[b.SubValue]=v
 			err:=b.Do.Exec(ctx)
 			if err !=nil{
 				if err == breakError{
@@ -285,8 +297,8 @@ func (b *ForRangeExp)Exec(ctx *Context)error  {
 		}
 	case map[string]interface{}:
 		for k,v:=range val.(map[string]interface{}){
-			ctx.Set(b.SubIdx,k)
-			ctx.Set(b.SubValue,v)
+			ctx.table[b.SubIdx]=k
+			ctx.table[b.SubValue]=v
 			err:=b.Do.Exec(ctx)
 			if err !=nil{
 				if err == breakError{
@@ -297,8 +309,8 @@ func (b *ForRangeExp)Exec(ctx *Context)error  {
 		}
 	case []string:
 		for k,v:=range val.([]string){
-			ctx.Set(b.SubIdx,k)
-			ctx.Set(b.SubValue,v)
+			ctx.table[b.SubIdx]=k
+			ctx.table[b.SubValue]=v
 			err:=b.Do.Exec(ctx)
 			if err !=nil{
 				if err == breakError{
@@ -309,8 +321,8 @@ func (b *ForRangeExp)Exec(ctx *Context)error  {
 		}
 	case []float64:
 		for k,v:=range val.([]float64){
-			ctx.Set(b.SubIdx,k)
-			ctx.Set(b.SubValue,v)
+			ctx.table[b.SubIdx]=k
+			ctx.table[b.SubValue]=v
 			err:=b.Do.Exec(ctx)
 			if err !=nil{
 				if err == breakError{
@@ -321,8 +333,8 @@ func (b *ForRangeExp)Exec(ctx *Context)error  {
 		}
 	case []int:
 		for k,v:=range val.([]int){
-			ctx.Set(b.SubIdx,k)
-			ctx.Set(b.SubValue,v)
+			ctx.table[b.SubIdx]=k
+			ctx.table[b.SubValue]=v
 			err:=b.Do.Exec(ctx)
 			if err !=nil{
 				if err == breakError{
@@ -420,3 +432,127 @@ type Op interface {
 //	return nil
 //}
 //
+var eqRegexp = regexp.MustCompile(`()==(.+)`)
+func ess(s ,sep string)([]string,error){
+
+	cs:=0
+	bl:=0
+	tokens:=[]string{}
+	token:=make([]byte,0, len(s))
+	for i:=0;i< len(s);i++{
+		v:=s[i]
+		token = append(token,v)
+		if v !='\'' && cs ==1{
+			continue
+		}
+		if v=='\'' && cs==0{
+			cs=1
+			continue
+		}
+		if v=='\'' && cs== 1{
+			cs = 0
+			continue
+		}
+		if v=='('{
+			bl++
+			continue
+		}
+		if v==')'{
+			if bl<=0{
+				return nil, errors.New("invalid eq exp" + s)
+			}
+			bl --
+			continue
+		}
+		if bl==0 && cs == 0{
+			if v == sep[0]{
+				j:=1
+				for j=1;j< len(sep);j++{
+					if i+j>= len(s){
+						break
+					}
+					if s[i+j]==sep[j]{
+						continue
+					}else{
+						break
+					}
+				}
+				//满足切分
+				if j== len(sep){
+					if len(token)>1{ // 加上
+						tokens = append(tokens,string(token[:len(token)-1]))
+						i+= len(sep)-1
+						token = token[:0]
+					}else{
+						return nil, errors.New("invalid token "+string(token))
+					}
+
+				}
+			}
+		}
+	}
+	if bl!=0 || cs!=0{
+		return nil, errors.New("invalid token () or ' is not complete ")
+	}
+	if len(token)>0{
+		tokens = append(tokens,string(token))
+	}
+	if len(tokens)!=2{
+		return nil, errors.New("invalid token:"+s)
+	}
+	return tokens, nil
+}
+var charMap = map[string]string{
+	"==":"eq",
+	">":"gt",
+	"<":"lt",
+	">=":"ge",
+	"<=":"le",
+	"!=":"not",
+}
+
+func parseEq(s ,sep string)(Value ,error){
+	tks,err:=ess(s,sep);
+	if err ==nil{
+		v:=&FuncValue{}
+		v.FuncName = charMap[sep]
+		v.Params = make([]Value,2)
+		v1,err:=parseValue(tks[0])
+		if err !=nil{
+			return nil, err
+		}
+		v2,err:=parseValue(tks[0])
+		if err !=nil{
+			return nil, err
+		}
+		v.Params[0] = v1
+		v.Params[1] = v2
+		return v, nil
+	}
+	return nil, err
+}
+var regexpBool = regexp.MustCompile(`(.+)((==)|(>)|(<)|(>=)|(<=)|(!=))(.+)`)
+func parseBoolValues(s string)(Value,error){
+	if !regexpBool.MatchString(s){
+		return nil, errors.New(s+" is not valid bool exp value")
+	}
+	if v,err:=parseEq(s,"==");err==nil{
+		return v,nil
+	}
+	if v,err:=parseEq(s,">=");err==nil{
+		return v,nil
+	}
+	if v,err:=parseEq(s,"<=");err==nil{
+		return v,nil
+	}
+	if v,err:=parseEq(s,">");err==nil{
+		return v,nil
+	}
+	if v,err:=parseEq(s,"<");err==nil{
+		return v,nil
+	}
+	if v,err:=parseEq(s,"!=");err==nil{
+		return v,nil
+	}
+	return nil, errors.New("invalid bool")
+}

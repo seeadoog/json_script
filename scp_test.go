@@ -1,10 +1,11 @@
 package jsonscpt
 
 import (
-	"github.com/robertkrimen/otto"
-	"testing"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"github.com/robertkrimen/otto"
+	"sort"
+	"testing"
 	"time"
 )
 
@@ -495,7 +496,46 @@ func TestAndOp_Equal(t *testing.T) {
 }
 
 func TestSwitchJson(t *testing.T) {
-fmt.Println(funcReg.MatchString("avcsdf_dsf(a,b,cd)"))
-r:=funcReg.FindAllStringSubmatch("avcsdf_dsf(a,b,cd)",-1)
-fmt.Println(r[0][2:])
+
+	//fmt.Println(ess("and('sdfdsf'==fsdf,adf==dfdf)","=="))
+	fmt.Println(binse([]int{0,1,2,3,4,5,6,7,8,9},0))
+	a:=sort.SearchInts([]int{0,1,2,3,4,5,6,7,8,9},0)
+	fmt.Println(a)
 }
+//0,1,2,3,4,5,6,7,8,9
+/**
+
+ */
+func binse(a []int,val int)int{
+	lo:=0
+	hi:= len(a)-1
+	for lo<=hi{
+		mid:=(lo+hi)/2
+		if a[mid]==val{
+			return val
+		}
+		if a[mid]>val{
+			hi=mid
+		}else{
+			lo =mid +1
+		}
+	}
+
+	return -1
+}
+var n = 1000000
+func TestCha(t *testing.T){
+	b:=make(chan int,100000)
+
+	go func() {
+		for i:=0;i<n;i++{
+			b<-i
+		}
+	}()
+	for i:=0;i<n;i++{
+		select {
+		case <-b:
+		}
+	}
+}
+

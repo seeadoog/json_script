@@ -182,20 +182,30 @@ var le Func = func(i ...interface{}) interface{} {
 	}
 	return false
 }
-//return
-var ret Func = func(i ...interface{}) interface{} {
+
+var exit Func = func(i ...interface{}) interface{} {
 	if len(i)>=3{
-		return &ErrorReturn{Code:int(number(i[0])),Message:ConvertToString(i[1]),Value:i[2]}
+		return &ErrorExit{Code: int(number(i[0])),Message:ConvertToString(i[1]),Value:i[2]}
 	}
 	if len(i)>=2{
-		return &ErrorReturn{Code:int(number(i[0])),Message:ConvertToString(i[1])}
+		return &ErrorExit{Code: int(number(i[0])),Message:ConvertToString(i[1])}
 	}
 	if len(i)>=1{
-		return &ErrorReturn{Code:int(number(i[0]))}
+		return &ErrorExit{Code: int(number(i[0]))}
+	}
+
+	return &ErrorExit{}
+}
+//return
+var ret Func = func(i ...interface{}) interface{} {
+
+	if len(i)>=1{
+		return &ErrorReturn{Value:i[0]}
 	}
 
 	return &ErrorReturn{}
 }
+
 var join Func = func(i ...interface{}) interface{} {
 	if len(i)>1{
 		var sp = ConvertToString(i[len(i)-1])
@@ -308,6 +318,24 @@ var input Func = func(i ...interface{}) interface{} {
 }
 
 
+var trim Func = func(i ...interface{}) interface{} {
+	if len(i)>=3{
+		if number(i[2])>=0{
+			return strings.TrimSuffix(ConvertToString(i[0]),ConvertToString(i[1]))
+		}
+
+		if number(i[2])<0{
+			return strings.TrimPrefix(ConvertToString(i[0]),ConvertToString(i[1]))
+		}
+	}
+	if len(i)>=2{
+		return strings.TrimPrefix(ConvertToString(i[0]),ConvertToString(i[1]))
+	}
+	if len(i)==1{
+		return i[0]
+	}
+	return ""
+}
 
 func number(i interface{})  float64{
 	switch i.(type) {

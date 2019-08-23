@@ -46,7 +46,10 @@ type FuncValue struct {
 func (v *FuncValue) Get(ctx *Context) interface{} {
 	var params = make([]interface{}, 0, len(v.Params))
 	for _, v := range v.Params {
-		params = append(params, v.Get(ctx))
+		if err,ok:=v.Get(ctx).(*ErrorExit);ok{
+			return err
+		}
+		params = append(params,v.Get(ctx))
 	}
 	if fun, ok := ctx.table[v.FuncName].(Func); ok {
 		return fun(params...)
@@ -100,6 +103,9 @@ func parseValue(s string) (Value,error) {
 	if s=="false"{
 		return &ConstValue{false},nil
 	}
+	//if v,err:= parseBoolValues(s);err ==nil{
+	//	return v,nil
+	//}
 
 	if funv.MatchString(s){
 		sub:=funv.FindAllSubmatch([]byte(s),-1)
@@ -113,6 +119,9 @@ func parseValue(s string) (Value,error) {
 			for i:=0;i< len(values);i++{
 				v:=values[i]
 				token=append(token,v)
+				if v !='\'' && cs ==1{
+					continue
+				}
 				if v=='('{
 					bl ++
 					continue

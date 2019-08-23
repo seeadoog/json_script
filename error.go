@@ -4,13 +4,13 @@ import "fmt"
 const(
 	CodeFuncDoesNotExists = -1
 )
-type ErrorReturn struct {
+type ErrorExit struct {
 	Message string
 	Code int
 	Value interface{}
 }
 
-func (e *ErrorReturn)Error()string  {
+func (e *ErrorExit)Error()string  {
 	return fmt.Sprintf("code=%d,message=%s",e.Code,e.Message)
 }
 
@@ -29,7 +29,20 @@ func IsReturnError(err error)(e *ErrorReturn,ok bool ) {
 	return
 }
 
-func IsReturnErrorI(err interface{})(e *ErrorReturn,ok bool ) {
-	e,ok =err.(*ErrorReturn)
+func IsExitErrorI(err interface{})(e *ErrorExit,ok bool ) {
+	e,ok =err.(*ErrorExit)
+	return
+}
+
+type ErrorReturn struct {
+	Value interface{}
+}
+
+func (e *ErrorReturn)Error()string  {
+	return fmt.Sprintf("%v",e.Value)
+}
+
+func IsExitError(err error)(e *ErrorExit,ok bool ) {
+	e,ok =err.(*ErrorExit)
 	return
 }
