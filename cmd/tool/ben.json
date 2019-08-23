@@ -1,5 +1,13 @@
 [
   {
+    "data": {
+      "tts": "cont",
+      "a": "sm",
+      "b": "s"
+    },
+    "key": "$"
+  },
+  {
     "if": "eq($.tts,'cont')",
     "then": [
       "$.val='valmap'",
@@ -8,25 +16,45 @@
     ]
   },
   {
-    "func":"mul(a,b)",
-    "do":[
+    "for": "k,v in $",
+    "do": "printf('$ key=%v,value=%v(',k,v)"
+  },
+  {
+    "func": "mul(a,b)",
+    "do": [
       "sum=0",
       "i=0",
       {
-        "for":"lt(i,b)",
-        "do":[
+        "for": "lt(i,b)",
+        "do": [
           "sum=add(sum,a)",
           "i=add(i,1)"
         ]
       },
-      "return(0,'',sum)"
+      "return(sum)"
     ]
   },
   "print(mul(8,9))",
   "print(mul(18,19))",
   "print(mul(28,9))",
   {
-    "for":"k,v in split('1,2,3,4,5',',')",
-    "do":"print(mul(k,v))"
-  }
+    "for": "k,v in split('11,22,33,44,55',',')",
+    "do": [
+      "print(mul(k,v))"
+    ]
+  },
+  {
+    "func": "cal(fun,a,b)",
+    "do": "return(fun(a,b))"
+  },
+  "mul(3,4)",
+  "print(cal(mul,8,9))",
+  "print(cal(add,8,9))",
+  "print(cal(eq,9,9))",
+  {
+    "func": "ebase(a,b)",
+    "do": "return(append(a,'_',b))"
+  },
+  "print(ebase('hello','world'))",
+  "print(trim('str_ent','ent',-1))"
 ]

@@ -136,3 +136,45 @@ func TestSo(t *testing.T){
 
 	fmt.Println(paramMap)
 }
+
+func TestEx(t *testing.T){
+	rule:=[]byte(`
+[
+  {
+    "if": "lt(user.age,15)",
+    "then": "user.generation='yong'"
+  },
+  {
+    "if": "lt(user.age,30)",
+    "then": [
+      "user.generation='old'",
+      "user.hasChild=true"
+    ]
+  },
+  {
+    "for":"k,v in user",
+    "do":"print('k==',k,'v==',v)"
+  },
+  {
+    "func":"show(u)",
+    "do":"printf('name=%s,age=%v,generation=%s',u.name,u.age,u.generation)"
+  },
+  "show(user)"
+]
+`)
+	scp,err:=jsonscpt.CompileExpFromJson(rule)
+	if err !=nil{
+		panic(err)
+	}
+	vm:=jsonscpt.NewVm()
+	user :=map[string]interface{}{
+		"name":"bob",
+		"age":"16",
+	}
+	vm.Set("user", user)
+	err =vm.SafeExecute(scp,nil)
+	if err !=nil{
+		panic(err)
+	}
+	fmt.Println("userMap:",user)
+}

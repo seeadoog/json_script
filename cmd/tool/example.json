@@ -1,0 +1,22 @@
+[
+  {
+    "if": "lt(user.age,15)",
+    "then": "user.generation='yong'"
+  },
+  {
+    "if": "lt(user.age,30)",
+    "then": [
+      "user.generation='old'",
+      "user.hasChild=true"
+    ]
+  },
+  {
+    "for":"k,v in user",
+    "do":"print(k,v)"
+  },
+  {
+    "func":"show(user)",
+    "do":"printf('name=%s,age=%v,generation=%s',user.name,user.age,user.generation)"
+  },
+  "show(user)"
+]
