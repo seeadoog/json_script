@@ -54,7 +54,7 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 	if fun, ok := ctx.table[v.FuncName].(Func); ok {
 		return fun(params...)
 	}else{
-		 panic("func:"+v.FuncName+" does not exists")
+		 //panic("func:"+v.FuncName+" does not exists")
 	}
 	return nil
 }

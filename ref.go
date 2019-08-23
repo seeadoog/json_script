@@ -2,12 +2,12 @@ package jsonscpt
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
-	"fmt"
-	"github.com/oliveagle/jsonpath"
-	"sync"
 	"regexp"
+	//"github.com/oliveagle/jsonpath"
+	"sync"
 )
 
 type QueryProp struct {
@@ -219,23 +219,7 @@ func parserToken(tks []tokens, cp, value interface{}) error {
 
 	return nil
 }
-/*
-SwitchJson() can switch format of json from $data to $dst by specific expression strings.
-attention that $dst must be type of *interface{}
-*/
-func SwitchJson(exps []SwitchExp, dst interface{}, data interface{}) error {
-	for _, v := range exps {
-		val, err := jsonpath.JsonPathLookup( data,v.DataExp)
-		if err != nil {
-			return err
-		}
-		err = marshalInterface(v.SrcExp, dst, val)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+
 
 var ruleRegexp= regexp.MustCompile(`(\w+|\$)(\[\d+\])?(\.\w+(\[\d+\])?)*$`)
 func checkRule(rule string) bool {

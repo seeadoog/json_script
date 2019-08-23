@@ -141,40 +141,24 @@ func TestEx(t *testing.T){
 	rule:=[]byte(`
 [
   {
-    "if": "lt(user.age,15)",
-    "then": "user.generation='yong'"
-  },
-  {
-    "if": "lt(user.age,30)",
-    "then": [
-      "user.generation='old'",
-      "user.hasChild=true"
-    ]
-  },
-  {
-    "for":"k,v in user",
-    "do":"print('k==',k,'v==',v)"
-  },
-  {
-    "func":"show(u)",
-    "do":"printf('name=%s,age=%v,generation=%s',u.name,u.age,u.generation)"
-  },
-  "show(user)"
+	"if":"eq('a','a')"
+  }
 ]
 `)
 	scp,err:=jsonscpt.CompileExpFromJson(rule)
 	if err !=nil{
 		panic(err)
 	}
-	vm:=jsonscpt.NewVm()
 	user :=map[string]interface{}{
 		"name":"bob",
 		"age":"16",
 	}
-	vm.Set("user", user)
-	err =vm.SafeExecute(scp,nil)
-	if err !=nil{
-		panic(err)
+	var vm *jsonscpt.Context
+	vm =jsonscpt.NewVm()
+	for i:=0;i<100000;i++{
+		err =vm.SafeExecute(scp,nil)
 	}
+
+
 	fmt.Println("userMap:",user)
 }
