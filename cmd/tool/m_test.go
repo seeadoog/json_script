@@ -21,87 +21,78 @@ func TestJs(t *testing.T){
 	vm:=otto.New()
 
 	vm.Set("$",paramMap)
-	cp,err:=vm.Compile("",`
-	if ($['tts']==='cont'){
-		$['val']='volmap'
-		$['single']=10000
-		$['sdk']=$['a']+$['b']+'_16k'
+	_,err:=vm.Compile("",`
+	data=[0,1,2,3,4,5,6,7,8,9]
+function bsearsh(arr,n){
+	lo =0
+	hi=arr.length
+	for(;lo<=hi;){
+		mid=(lo+hi)/2
+		if (arr[mid]===n){
+			return mid
+		}
+		if (arr[mid]<n){
+			lo=mid
+		}else{
+			hi=mid+1
+		}
 	}
-	if ($['ent']==''){
-
-	}else{
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
-	$['appid']=$['subappid']
+	return -1
 }
+bsearsh(data,8)
 `)
 	st:=time.Now()
-	for i:=0;i<100000;i++{
-
-		vm.Run(cp)
+	for i:=0;i<10000;i++{
+		vm=otto.New()
+		//vm.Run(cp)
 	}
-	fmt.Println(vm.Get("str"))
 	fmt.Println(err,time.Since(st))
-	fmt.Println(paramMap)
 }
 
 
 
 func TestJson(t *testing.T){
-
-	vm:=jsonscpt.NewVm()
-
-	vm.Set("$",paramMap)
 	cp,err:=jsonscpt.CompileExpFromJson([]byte(`
-	[
+[
   {
-    "if": "eq($.tts,'cont')",
-    "then": [
-      "$.val='valmap'",
-      "$.single=10000",
-      "$.sdk=append($.a,$.b,'_16k')"
+    "data":[0,1,2,3,4,5,6,7,8,9],
+    "key":"arr"
+  }
+  ,
+  {
+    "func":"bsearch(arr,n)",
+    "do":[
+      "lo=0",
+      "hi=add(len(arr),-1)",
+      {
+        "for":"le(lo,hi)",
+        "do":[
+          "mid=div(add(lo,hi),2,-1)",
+          {
+            "if":"eq(get(arr,mid),n)",
+            "then":[
+              "return(mid)"
+            ]
+          },
+          {
+            "if":"lt(get(arr,mid),n)",
+            "then":"lo=add(mid,1)",
+            "else":"hi=mid"
+          }
+        ]
+      },
+      "return(-1)"
     ]
   },
-	{
-		"if":"not($.ent)",
-		"then":"return(0,'ent')"
-	},
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid",
-	"$.appid=$.subappid"
+  "bsearch(arr,8)"
+
 ]
 `))
 	st:=time.Now()
-	for i:=0;i<100000;i++{
-
+	for i:=0;i<10000;i++{
+		vm:=jsonscpt.NewVm()
 		vm.SafeExecute(cp,nil)
 	}
-	fmt.Println(vm.Get("str"))
 	fmt.Println(err,time.Since(st))
 	fmt.Println(paramMap)
 }
@@ -138,28 +129,27 @@ func TestSo(t *testing.T){
 }
 
 func TestEx(t *testing.T){
-	rule:=[]byte(`
-[
-  {
-	"if":"eq('a','a')"
-  }
-]
-`)
-	scp,err:=jsonscpt.CompileExpFromJson(rule)
-	if err !=nil{
-		panic(err)
+	for i:=0;i<20000000;i++{
+		bser([]int{0,1,2,3,4,5,6,7,8,9},8)
 	}
-	user :=map[string]interface{}{
-		"name":"bob",
-		"age":"16",
-	}
-	var vm *jsonscpt.Context
-	vm =jsonscpt.NewVm()
-	for i:=0;i<100000;i++{
-		err =vm.SafeExecute(scp,nil)
-	}
-
-
-	fmt.Println("userMap:",user)
 }
+
+func bser(a []int,n int)int{
+	lo:=0
+	hi:= len(a)
+	for lo<=hi{
+		mid:=(lo+hi)/2
+		if a[mid]==n{
+			return mid
+		}
+		if a[mid]<n{
+			lo=mid
+		}else{
+			hi=mid+1
+		}
+
+	}
+	return -1
+}
+
 

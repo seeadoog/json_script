@@ -1,61 +1,85 @@
 [
   {
-    "data": {
-      "tts": "cont",
-      "a": "sm",
-      "b": "s"
-    },
-    "key": "$"
-  },
+    "data":[0,1,2,3,4,5,6,7,8,9],
+    "key":"arr"
+  }
+  ,
   {
-    "if": "eq($.tts,'cont')",
-    "then": [
-      "$.val='valmap'",
-      "$.single=10000",
-      "$.sdk=append($.a,$.b,'_16k')"
-    ]
-  },
-  {
-    "for": "k,v in $",
-    "do": "printf('$ key=%v,value=%v(',k,v)"
-  },
-  {
-    "func": "mul(a,b)",
-    "do": [
-      "sum=0",
-      "i=0",
+    "func":"bsearch(arr,n)",
+    "do":[
+      "lo=0",
+      "hi=add(len(arr),-1)",
       {
-        "for": "lt(i,b)",
-        "do": [
-          "sum=add(sum,a)",
-          "i=add(i,1)"
+        "for":"le(lo,hi)",
+        "do":[
+          "mid=div(add(lo,hi),2,-1)",
+          {
+            "if":"eq(get(arr,mid),n)",
+            "then":[
+              "return(mid)"
+            ]
+          },
+          {
+            "if":"lt(get(arr,mid),n)",
+            "then":"lo=add(mid,1)",
+            "else":"hi=mid"
+          }
         ]
       },
-      "return(sum)"
+      "return(-1)"
     ]
   },
-  "print(mul(8,9))",
-  "print(mul(18,19))",
-  "print(mul(28,9))",
+  "print(bsearch(arr,8))",
   {
-    "for": "k,v in split('11,22,33,44,55',',')",
-    "do": [
-      "print(mul(k,v))"
+    "data":[
+      {"arg":0, "want":0},
+      {"arg":1, "want":1},
+      {"arg":2, "want":2},
+      {"arg":3, "want":3},
+      {"arg":4, "want":4},
+      {"arg":5, "want":5},
+      {"arg":6, "want":6},
+      {"arg":7, "want":7},
+      {"arg":8, "want":8},
+      {"arg":9, "want":19}
+    ],
+    "key":"test_case"
+  },
+  {
+    "for":"k,v in test_case",
+    "do":[
+      "act=bsearch(arr,v.arg)",
+      {
+        "if":"eq(act,v.want)",
+        "then":"print('case passed')",
+        "else":"print('case not passed,expect:',v.want,'actual:',act)"
+      }
     ]
   },
   {
-    "func": "cal(fun,a,b)",
-    "do": "return(fun(a,b))"
+    "func":"push_s(s,data)",
+    "do":[
+      "old=s.top",
+      "s.top=new()",
+      "s.top.data=data",
+      "s.top.next=old"
+    ]
   },
-  "mul(3,4)",
-  "print(cal(mul,8,9))",
-  "print(cal(add,8,9))",
-  "print(cal(eq,9,9))",
   {
-    "func": "ebase(a,b)",
-    "do": "return(append(a,'_',b))"
+    "func":"pop(s)",
+    "do":[
+      "d=s.top",
+      "s.top=s.top.next",
+      "return(d.data)"
+
+    ]
   },
-  "print(ebase('hello','world'))",
-  "print(trim('str_ent','ent',-1))"
+  "stack=new()",
+  "push_s(stack,1)",
+  "push_s(stack,2)",
+  "push_s(stack,3)",
+  "print(pop(stack))",
+  "print(pop(stack))",
+  "print(pop(stack))"
 
 ]

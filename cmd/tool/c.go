@@ -5,7 +5,7 @@ import (
 	"git.xfyun.cn/AIaaS/json_script"
 )
 
-func main(){
+func main1(){
 	rule:=[]byte(`
 [
   {
