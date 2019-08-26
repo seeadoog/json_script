@@ -51,11 +51,12 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 		}
 		params = append(params,v.Get(ctx))
 	}
-	if fun, ok := ctx.table[v.FuncName].(Func); ok {
+	if fun, ok := ctx.funcs[v.FuncName]; ok {
 		return fun(params...)
-	}else{
-		 //panic("func:"+v.FuncName+" does not exists")
+	}else if fun, ok := ctx.table[v.FuncName].(Func); ok{
+		return fun(params...)
 	}
+	//panic("func:"+v.FuncName+" does not exists")
 	return nil
 }
 func (v *FuncValue)GetName()string  {

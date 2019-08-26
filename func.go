@@ -337,6 +337,13 @@ var trim Func = func(i ...interface{}) interface{} {
 	return ""
 }
 
+var compare Func = func(i ...interface{}) interface{} {
+	if len(i)>=2{
+		return strings.Compare(ConvertToString(i[0]),ConvertToString(i[1]))
+	}
+	return -1
+}
+
 func number(i interface{})  float64{
 	switch i.(type) {
 	case float64:

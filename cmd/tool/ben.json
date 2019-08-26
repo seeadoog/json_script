@@ -57,4 +57,5 @@
   },
   "print(ebase('hello','world'))",
   "print(trim('str_ent','ent',-1))"
+
 ]

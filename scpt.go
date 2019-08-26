@@ -37,8 +37,46 @@ var (
 		"set":1,
 		"exit":1,
 		"trim":1,
+		"compare": 1,
+	}
+
+	funcs = map[string]Func{   // read only
+		"append":apd,
+		"len":lens,
+		"split":split,
+		"printf":printf,
+		"print":printlnn,
+		"sprintf":sprintf,
+		"add":add,
+		"delete": deleteFun,
+		"isnil":isNil,
+		"and":and,
+		"or": or,
+		"eq": eq,
+		"gt": gt,
+		"ge": ge,
+		"le":le,
+		"lt": lt,
+		"not": not,
+		"return":ret,
+		"exit": exit,
+		"in": in,
+		"contains": contains,
+		"join": join,
+		"set": set,
+		"get": get,
+		"input": input,
+		"trim": trim,
+		"compare": compare,
 	}
 )
+//可以用于初始化vm，减少vm创建开销。初始化执行
+func SetInlineFunc (name string,f Func){
+	if isSystemId(name){
+		return
+	}
+	funcs[name] = f
+}
 
 func isSystemId(s string)bool  {
 	if systemId[s]==1{
@@ -49,13 +87,15 @@ func isSystemId(s string)bool  {
 
 type Context struct {
 	table map[string]interface{}  // save all variables
+	funcs map[string]Func
 }
 
 func NewVm() *Context {
 	c:=&Context{
 		table:map[string]interface{}{},
+		funcs:funcs,    //内置函数分离，减少创建vm的开销
 	}
-	c.init()
+	//c.init()
 	return c
 }
 
@@ -94,7 +134,7 @@ func (ctx *Context)init()  {
 func (ctx *Context)Func(name string,params ...interface{})  {
 
 }
-
+//不能写到funcmap中，否则会
 func (ctx *Context)SetFunc(name string,value Func)  {
 	ctx.table[name] = value
 }

@@ -250,3 +250,34 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
+func TestMap(t *testing.T){
+	var s = []string{}
+	for k, _ := range systemId {
+		s =append(s,k)
+	}
+	for i:=0;i<10000000;i++{
+		if isSystemId("in"){
+
+		}
+	}
+}
+
+func TestMap2(t *testing.T){
+	var s = []string{}
+	for k, _ := range systemId {
+		s =append(s,k)
+	}
+	for i:=0;i<1000000;i++{
+		NewVm()
+	}
+}
+
+func isContains(ss []string,s string)bool{
+
+	for i:=0;i< len(ss);i++{
+		if ss[i] == s{
+			return true
+		}
+	}
+	return false
+}

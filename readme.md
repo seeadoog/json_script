@@ -77,3 +77,40 @@ exit(code,msg)|终止script的执行并返回一个error，包含code，和messa
 return(obj)|放在函数中会作为返回值
 
 
+#### syntax
+
+1. if else 如果if语句中的bool值为真执行then 部分，否则执行else部分
+
+````
+{
+    "if":"eq(a,5)"
+    "then":"print('a == 5')",
+    "else":"print('a != 5')"
+
+}
+````
+
+2. foreach 遍历map或者数组。
+````
+{
+    "for":"k,v in user",
+    "do":"print('k==',k,'v==',v)"
+ },
+````
+
+3. 定义function  函数名(参数名....)
+
+````
+{
+    "func":"show(u)",
+    "do":"printf('name=%s,age=%v,generation=%s',u.name,u.age,u.generation)"
+}
+````
+
+4. bool 值的判定
+
+任何基础类型都可以视为bool值
+
+string  ： 长度大于0 为 true 否则 false
+number :  >0 为true  <=0 为false
+bool 值：bool值
