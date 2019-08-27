@@ -52,7 +52,7 @@ bsearsh(data,8)
 
 
 func TestJson(t *testing.T){
-	cp,err:=jsonscpt.CompileExpFromJson([]byte(`
+	b:=[]byte(`
 [
   {
     "data":[0,1,2,3,4,5,6,7,8,9],
@@ -87,14 +87,38 @@ func TestJson(t *testing.T){
   "bsearch(arr,8)"
 
 ]
-`))
-	st:=time.Now()
-	for i:=0;i<10000;i++{
-		vm:=jsonscpt.NewVm()
-		vm.SafeExecute(cp,nil)
+`)
+	b=[]byte(`
+[
+	{
+		"data":{"name":"lixnag","beach":"slsfdsf"},
+		"key":"a"
+	},
+
+	"a.hello='lixiang'",
+	{
+		"if":"eq($.appid,'123456')",
+		"then":"$.asd='sdf'"
+	},
+	"ast=''",
+	{
+		"for":"k,v in a",
+		"do":"ast=append(ast,v)"
 	}
+]
+
+`)
+	cp,err:=jsonscpt.CompileExpFromJson(b)
+	st:=time.Now()
+	vm:=jsonscpt.NewVm()
+	var obj interface{}
+	for i:=0;i<100000;i++{
+		jsonscpt.MarshalInterface("$.name",&obj,"name")
+
+	}
+	vm.SafeExecute(cp,nil)
 	fmt.Println(err,time.Since(st))
-	fmt.Println(paramMap)
+	fmt.Println(vm.Get("ast"))
 }
 
 func TestSo(t *testing.T){
