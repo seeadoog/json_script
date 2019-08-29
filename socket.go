@@ -7,7 +7,7 @@ import (
 var SocketListen Func = func(i ...interface{}) interface{} {
 	if len(i)>0{
 
-		ls,err:=net.Listen("tcp4",ConvertToString(i[0]))
+		ls,err:=net.Listen("tcp4", String(i[0]))
 		if err !=nil{
 			return -1
 		}
@@ -33,7 +33,7 @@ var SocketRead Func = func(i ...interface{}) interface{} {
 	if len(i)>1{
 		conn,ok:=i[0].(net.Conn)
 		if ok{
-			b:=make([]byte,int(number(i[1])))
+			b:=make([]byte,int(Number(i[1])))
 			n,err:=conn.Read(b)
 			if err !=nil{
 				return -1

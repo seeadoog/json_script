@@ -28,7 +28,7 @@ func parseSetExp(s string)(Exp, error){
 			}
 			return &FuncExp{Value:val},nil
 		}
-		return nil,errors.New("invalid set exp:"+s+" len:"+ConvertToString(len(v)))
+		return nil,errors.New("invalid set exp:"+s+" len:"+ String(len(v)))
 	}
 	v[0] =trimspace(v[0])
 	v[1] =trimspace(v[1])

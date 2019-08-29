@@ -18,8 +18,8 @@ func Test_number(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := number(tt.args.i); got != tt.want {
-				t.Errorf("number() = %v, want %v", got, tt.want)
+			if got := Number(tt.args.i); got != tt.want {
+				t.Errorf("Number() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -38,8 +38,8 @@ func TestConvertToString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ConvertToString(tt.args.v); got != tt.want {
-				t.Errorf("ConvertToString() = %v, want %v", got, tt.want)
+			if got := String(tt.args.v); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})
 	}

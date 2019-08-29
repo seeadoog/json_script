@@ -263,15 +263,13 @@ func TestMap(t *testing.T){
 }
 
 func TestMap2(t *testing.T){
-	var s = []string{}
-	for k, _ := range systemId {
-		s =append(s,k)
-	}
-	for i:=0;i<1000000;i++{
-		NewVm()
-	}
+	a:=[][]int{}
+	sums(10,&a)
+	fmt.Println(a)
 }
-
+//6
+//1+5 2+4 3+3
+//
 func isContains(ss []string,s string)bool{
 
 	for i:=0;i< len(ss);i++{
@@ -280,4 +278,27 @@ func isContains(ss []string,s string)bool{
 		}
 	}
 	return false
+}
+
+func sums(n int,t *[][]int){
+	sb:=[]int{}
+	for i:=1;i<=n/2;i++{
+		sb= append(sb,i,n-i)
+		*t=append(*t,sb)
+		sb = sb[:0]
+		if i>1 {
+			r:=&[][]int{}
+			sums(i,r)
+			for _, v := range *r {
+				*t = append(*t,append(v,n-i))
+			}
+		}
+		if n-i>1 {
+			r:=&[][]int{}
+			sums(n-i,r)
+			for _, v := range *r {
+				*t = append(*t,append(v,i))
+			}
+		}
+	}
 }

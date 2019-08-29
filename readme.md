@@ -39,7 +39,7 @@ go get https://github.com/seeadoog/json_script
 	vm:=jsonscpt.NewVm()
 	user :=map[string]interface{}{
 		"name":"bob",
-		"age":"16",
+		"age":16,
 	}
 	vm.Set("user", user)
 	err =vm.SafeExecute(scp,nil)
@@ -77,7 +77,7 @@ exit(code,msg)|终止script的执行并返回一个error，包含code，和messa
 return(obj)|放在函数中会作为返回值
 
 
-#### syntax
+#### syntax 语法
 
 1. if else 如果if语句中的bool值为真执行then 部分，否则执行else部分
 
@@ -114,3 +114,16 @@ return(obj)|放在函数中会作为返回值
 string  ： 长度大于0 为 true 否则 false
 number :  >0 为true  <=0 为false
 bool 值：bool值
+
+5. 赋值
+//值得类型有三种，bool，string，number
+````
+[
+"va=123", //给va 赋值为 number 类型
+"vstr='hello world'" // 给vstr赋值为 string类型
+"vb=true"   // 给vb赋值为bool类型，值为true
+"param.a='hello'" // 给param map中的a赋值string =  'hello'
+]
+
+
+````

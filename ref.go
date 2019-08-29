@@ -133,7 +133,7 @@ func parserToken(tks []tokens, cp, value interface{}) error {
 					return errors.New(fmt.Sprintf("create field failed ,%s cannot convert_ to map", field))
 				}
 				//return errors.New(fmt.Sprintf("create field failed ,%s->parent cannot convert_ to map", field))
-				cpms[field] = ConvertToString(value)
+				cpms[field] = String(value)
 				return nil
 			}
 

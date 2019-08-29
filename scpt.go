@@ -38,6 +38,8 @@ var (
 		"exit":1,
 		"trim":1,
 		"compare": 1,
+		"div":1,
+		"mul":1,
 	}
 
 	funcs = map[string]Func{   // read only
@@ -68,6 +70,9 @@ var (
 		"input": input,
 		"trim": trim,
 		"compare": compare,
+		"div":div,
+		"mul":mul,
+		"new":news,
 	}
 )
 //可以用于初始化vm，减少vm创建开销。初始化执行
@@ -194,10 +199,6 @@ func boolValid(s string) bool {
 	return true
 }
 
-
-
-
-
 func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 	if exp,ok:=v.(string);ok{
 		if exp=="break"{   // parse break
@@ -269,7 +270,7 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 						return r,nil
 					}
 				}
-				return nil,errors.New("invalid for range exp"+ConvertToString(v))
+				return nil,errors.New("invalid for range exp"+ String(v))
 
 			}else{  // for bool
 				exp:=&ForExp{}
@@ -293,8 +294,8 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 
 		}else if data,ok:=m["data"];ok{
 			return &DataExp{
-				Key:ConvertToString(m["key"]),
-				Data:data,
+				Key:  String(m["key"]),
+				Data: data,
 			},nil
 		}else if gofun,ok:=m["go"];ok{
 
@@ -325,7 +326,7 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 		return parsedExp,nil
 	}
 
-	return nil,errors.New("invalid exp:"+ConvertToString(v))
+	return nil,errors.New("invalid exp:"+ String(v))
 }
 var funcReg = regexp.MustCompile(`(\w+)\((.*)\)`)
 func parseFunc(s string,body interface{})(Exp,error){

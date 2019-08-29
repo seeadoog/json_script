@@ -29,7 +29,10 @@ type VarValue struct {
 }
 
 func (v *VarValue) Get(ctx *Context) interface{} {
-	o, _ := CachedJsonpathLookUp(ctx.table, v.Key)
+	o, err := CachedJsonpathLookUp(ctx.table, v.Key)
+	if  err !=nil{
+		return  ctx.funcs[v.Key]
+	}
 	return o
 }
 
@@ -46,10 +49,11 @@ type FuncValue struct {
 func (v *FuncValue) Get(ctx *Context) interface{} {
 	var params = make([]interface{}, 0, len(v.Params))
 	for _, v := range v.Params {
-		if err,ok:=v.Get(ctx).(*ErrorExit);ok{
+		ev:=v.Get(ctx)
+		if err,ok:=ev.(*ErrorExit);ok{
 			return err
 		}
-		params = append(params,v.Get(ctx))
+		params = append(params,ev)
 	}
 	if fun, ok := ctx.funcs[v.FuncName]; ok {
 		return fun(params...)

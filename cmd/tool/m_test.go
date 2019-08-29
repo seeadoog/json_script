@@ -49,13 +49,17 @@ bsearsh(data,8)
 	fmt.Println(err,time.Since(st))
 }
 
-
+// a= 5
+// b = 6
+// a[0]  = 5
+//a [1] = 5
+//m]
 
 func TestJson(t *testing.T){
 	b:=[]byte(`
 [
   {
-    "data":[0,1,2,3,4,5,6,7,8,9],
+    "data":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23],
     "key":"arr"
   }
   ,
@@ -84,41 +88,47 @@ func TestJson(t *testing.T){
       "return(-1)"
     ]
   },
-  "bsearch(arr,8)"
+  "bsearch(arr,0)"
 
 ]
 `)
 	b=[]byte(`
 [
-	{
-		"data":{"name":"lixnag","beach":"slsfdsf"},
-		"key":"a"
-	},
-
-	"a.hello='lixiang'",
-	{
-		"if":"eq($.appid,'123456')",
-		"then":"$.asd='sdf'"
-	},
-	"ast=''",
-	{
-		"for":"k,v in a",
-		"do":"ast=append(ast,v)"
-	}
+	"$.ent='s'",
+	"$.ent='s'",
+	"$.ent='s'",
+	"$.ent='s'"
 ]
 
 `)
 	cp,err:=jsonscpt.CompileExpFromJson(b)
 	st:=time.Now()
 	vm:=jsonscpt.NewVm()
-	var obj interface{}
-	for i:=0;i<100000;i++{
-		jsonscpt.MarshalInterface("$.name",&obj,"name")
+	vm.Set("$",map[string]interface{}{
+		"ent":"sms16k",
+	})
+	var obj =  map[string]interface{}{
+		"name":"lixiang",
+	}
+	var a interface{}
+	for i:=0;i<5000;i++{
+		jsonscpt.MarshalInterface("$.name",obj,"name")
+		//if na,ok:=obj["$"].(map[string]interface{});ok{
+		//	na["name"] = "name"
+		//}else{
+		//	obj["$"] = map[string]interface{}{}
+		//}
+		//	vm:=jsonscpt.NewVm()
+		//	vm.SafeExecute(cp,nil)
 
+		//jsonscpt.CachedJsonpathLookUp(obj,"name")
+		//a = obj["name"]
 	}
 	vm.SafeExecute(cp,nil)
 	fmt.Println(err,time.Since(st))
 	fmt.Println(vm.Get("ast"))
+	fmt.Println(obj)
+	fmt.Println(a)
 }
 
 func TestSo(t *testing.T){
