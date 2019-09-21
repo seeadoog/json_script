@@ -60,7 +60,7 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 	}else if fun, ok := ctx.table[v.FuncName].(Func); ok{
 		return fun(params...)
 	}
-	//panic("func:"+v.FuncName+" does not exists")
+	panic("func:"+v.FuncName+" does not exists")
 	return nil
 }
 func (v *FuncValue)GetName()string  {

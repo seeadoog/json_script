@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"encoding/json"
+	"unsafe"
 )
 
 type Func func(...interface{})interface{}
@@ -124,7 +125,7 @@ var deleteFun Func = func(i ...interface{}) interface{} {
 // &&
 var and Func = func(i ...interface{}) interface{} {
 	for _, v := range i {
-		if !convertToBool(v){
+		if !Bool(v){
 				return false
 		}
 	}
@@ -133,7 +134,7 @@ var and Func = func(i ...interface{}) interface{} {
 //||
 var or Func = func(i ...interface{}) interface{} {
 	for _, v := range i {
-		if convertToBool(v){
+		if Bool(v){
 			return true
 		}
 	}
@@ -151,7 +152,7 @@ var not Func = func(i ...interface{}) interface{} {
 	if len(i)<1{
 		return false
 	}
-	return !convertToBool(i[0])
+	return !Bool(i[0])
 }
 // >
 var gt Func = func(i ...interface{}) interface{} {
@@ -357,6 +358,7 @@ var mul Func = func(i ...interface{}) interface{} {
 var news Func = func(i ...interface{}) interface{} {
 	return map[string]interface{}{}
 }
+
 func Number(i interface{})  float64{
 	switch i.(type) {
 	case float64:
@@ -374,7 +376,51 @@ func Number(i interface{})  float64{
 	return 0
 }
 
+var fromJson Func  = func(i ...interface{}) interface{} {
+	if len(i)>0{
+		var r interface{}
+		str:=String(i[0])
+		json.Unmarshal(*(*[]byte)(unsafe.Pointer(&str)),&r)
+		return r
+	}
+	return nil
+}
 
+func stringFunc(i ...interface{}) interface{} {
+	if len(i)>0{
+		return String(i[0])
+	}
+	return ""
+}
+
+func numberFunc(i ...interface{}) interface{} {
+	if len(i)>0{
+		return Number(i[0])
+	}
+	return ""
+}
+
+func boolFunc(i ...interface{}) interface{} {
+	if len(i)>0{
+		return Bool(i[0])
+	}
+	return ""
+}
+func sub(i ...interface{})interface{}{
+	if len(i)>=2{
+		return Number(i[0])-Number(i[1])
+	}
+	panic("args of op sub at least has 2")
+	return 0
+}
+
+func intt(i ...interface{})interface{}{
+	if len(i)>=1{
+		return int(Number(i[0]))
+	}
+	panic("convert to int ,args at least has 1")
+	return 0
+}
 func String(v interface{}) string {
 	switch v.(type) {
 	case string:return v.(string)
@@ -386,4 +432,11 @@ func String(v interface{}) string {
 	default:
 		return fmt.Sprintf("%v",v)
 	}
+}
+
+func throw(i ...interface{})interface{}{
+	if len(i)>0{
+		panic(i[0])
+	}
+	return nil
 }

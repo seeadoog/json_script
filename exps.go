@@ -115,7 +115,7 @@ type BoolValue struct {
 }
 
 func (b *BoolValue)Match(ctx *Context)bool  {
-	return convertToBool(b.Value.Get(ctx))
+	return Bool(b.Value.Get(ctx))
 }
 
 
@@ -124,20 +124,14 @@ func (b *BoolValue)Match(ctx *Context)bool  {
 //}
 
 
-func convertToBool(v interface{})bool  {
+func Bool(v interface{})bool  {
 	switch v.(type) {
 	case bool:
 		return v.(bool)
 	case string:
-		if len(v.(string))>0{
-			return true
-		}
-		return false
+		return len(v.(string))>0
 	case float64:
-		if int(v.(float64))>0{
-			return true
-		}
-		return false
+		return int(v.(float64))>0
 	}
 	return false
 }
@@ -365,8 +359,23 @@ type Op interface {
 	Equal(x,y Value,ctx *Context)bool
 }
 
+type TryCatchExpt struct {
+	Try Exp
+	Execption string
+	Do Exp
+}
 
-
+func (e *TryCatchExpt)Exec(ctx *Context)error  {
+	defer func() {
+		if err:=recover();err !=nil{
+			if e.Do !=nil{
+				ctx.Set(e.Execption,err)
+				e.Do.Exec(ctx)
+			}
+		}
+	}()
+	return e.Try.Exec(ctx)
+}
 //type BoolValue struct {
 //	X Value
 //	Op Op

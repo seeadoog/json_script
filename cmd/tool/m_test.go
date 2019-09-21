@@ -12,9 +12,9 @@ var paramMap=map[string]interface{}{
 	"td":"tre",
 	"tdds":"tre",
 	"a":"e",
-	"b":"s",
+	"b":"int2bytes",
 	"subappid":"34345",
-	"ent":"s",
+	"ent":"int2bytes",
 }
 func TestJs(t *testing.T){
 
@@ -94,10 +94,10 @@ func TestJson(t *testing.T){
 `)
 	b=[]byte(`
 [
-	"$.ent='s'",
-	"$.ent='s'",
-	"$.ent='s'",
-	"$.ent='s'"
+	"$.ent='int2bytes'",
+	"$.ent='int2bytes'",
+	"$.ent='int2bytes'",
+	"$.ent='int2bytes'"
 ]
 
 `)

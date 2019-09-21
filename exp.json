@@ -1,0 +1,14 @@
+{
+  "try": [
+    "f=open_file('exp.json')",
+    {
+      "func": "range(data,last)",
+      "do": [
+        "print(data,last)"
+      ]
+    },
+    "range_reader(f,range,10)"
+  ],
+  "ecp": "e",
+  "do": "print(e)"
+}

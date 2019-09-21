@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"regexp"
 	"strings"
+	"sync"
 )
 var (
 	systemId = map[string]int{
@@ -73,6 +75,14 @@ var (
 		"div":div,
 		"mul":mul,
 		"new":news,
+		"from_json":fromJson,
+		"to_json":jsonMarshal,
+		"number":numberFunc,
+		"string":stringFunc,
+		"bool":boolFunc,
+		"int":intt,
+		"sub":sub,
+		"throw":throw,
 	}
 )
 //可以用于初始化vm，减少vm创建开销。初始化执行
@@ -103,38 +113,32 @@ func NewVm() *Context {
 	//c.init()
 	return c
 }
-
-
-func (ctx *Context)init()  {
-	ctx.SetFunc("append",apd)
-	ctx.SetFunc("len",lens)
-	ctx.SetFunc("split",split)
-	ctx.SetFunc("printf",printf)
-	ctx.SetFunc("print",printlnn)
-	ctx.SetFunc("sprintf",sprintf)
-	ctx.SetFunc("add",add)
-	ctx.SetFunc("delete", deleteFun)
-	ctx.SetFunc("isnil", isNil)
-	ctx.SetFunc("and", and)
-	ctx.SetFunc("or", or)
-	ctx.SetFunc("eq", eq)
-	ctx.SetFunc("gt", gt)
-	ctx.SetFunc("ge", ge)
-	ctx.SetFunc("le", le)
-	ctx.SetFunc("lt", lt)
-	ctx.SetFunc("not", not)
-	ctx.SetFunc("return", ret)
-	ctx.SetFunc("exit", exit)
-	ctx.SetFunc("in", in)
-	ctx.SetFunc("contains", contains)
-	ctx.SetFunc("join", join)
-	ctx.SetFunc("set", set)
-	ctx.SetFunc("get", get)
-	ctx.SetFunc("input", input)
-	ctx.SetFunc("trim", trim)
-
-
+type ConcurrencyContext struct {
+	*Context
+	lock *sync.RWMutex
 }
+
+func NewConcurrencyVm() *ConcurrencyContext {
+	c:=&ConcurrencyContext{
+		Context:NewVm(),    //内置函数分离，减少创建vm的开销
+		lock:&sync.RWMutex{},
+	}
+	//c.init()
+	return c
+}
+func (ctx *ConcurrencyContext)Set(k string,v interface{})  {
+	ctx.lock.Lock()
+	defer ctx.lock.Unlock()
+	MarshalInterface(k,ctx.table,v)
+}
+
+func (ctx *ConcurrencyContext)Get(k string)interface{}  {
+	ctx.lock.RLock()
+	defer ctx.lock.RUnlock()
+	v,_:=CachedJsonpathLookUp(ctx.table,k)
+	return v
+}
+
 
 func (ctx *Context)Func(name string,params ...interface{})  {
 
@@ -170,6 +174,15 @@ func (ctx *Context)ExecJson(s []byte) error {
 		return err
 	}
 	return ctx.ExecJsonObject(i)
+}
+
+func (ctx *Context)ExecFile(f string)error{
+
+	b,err:=ioutil.ReadFile(f)
+	if err!=nil{
+		return err
+	}
+	return ctx.ExecJson(b)
 }
 
 func (c *Context)Execute(exp Exp) error {
@@ -308,6 +321,23 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 			if params,ok:=m["do"];ok{
 				return parseFunc(fun,params)
 			}
+		}else if try,ok:=m["try"];ok{
+			excp,ok:=m["ecp"].(string)
+			if !ok{
+				return nil, errors.New("invalid ecp of try block")
+			}
+			if m["do"] ==nil{
+				return nil,errors.New("invalid try exp, ecp or do block is nil")
+			}
+			tryExp,err:=CompileExpFromJsonObject(try)
+			if err !=nil{
+				return nil, err
+			}
+			doExp,err:=CompileExpFromJsonObject(m["do"])
+			if err !=nil{
+				return nil, err
+			}
+			return &TryCatchExpt{Try:tryExp,Do:doExp,Execption:excp}, nil
 		}
 
 		return nil,errors.New("invalid object:"+fmt.Sprintf("%v",v))

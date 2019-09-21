@@ -1,0 +1,58 @@
+[
+  {
+    "data": {
+      "common": {
+        "app_id": "123456"
+      },
+      "business": {
+
+      },
+      "data": {
+        "text": "",
+        "status": 2
+      }
+    },
+    "key": "$"
+  },
+  {
+    "try": [
+      {
+        "func": "on_open()",
+        "do": [
+          "print('success open ws')"
+        ]
+      },
+
+      {
+        "func": "on_message(msg)",
+        "do": [
+          "print('receve',msg)",
+          "write(output,base64decode(msg.data.audio))",
+          {
+            "if": "eq(msg.data.status,2)",
+            "then": "tts_end=true"
+          }
+        ]
+      },
+      {
+        "func": "on_close(msg)",
+        "do": "print('close...',msg)"
+      },
+      "output=create_file('out.pcm')",
+      "ws=websocket_open('ws://10.1.87.70:8888/v2/iat',on_open,on_message,on_close)",
+      "$.data.text=base64encode(read_file('tts.txt'))",
+      "websocket_write(ws,$)",
+      "sleep(2000)",
+      "close(output)",
+      {
+        "if": "eq(tts_end,true)",
+        "then": [
+          "print(boce_info(0,'success',10))"
+        ]
+      }
+    ],
+    "ecp":"e",
+    "do":"print(boce_info(10000,e,10))"
+  }
+
+]

@@ -3,6 +3,7 @@ package jsonscpt
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"testing"
 )
 
@@ -164,7 +165,7 @@ func TestExec(t *testing.T) {
 
 }
 
-//== >= <= | && | ||
+//== >= <= | && | ||缺少
 
 
 
@@ -201,36 +202,58 @@ func TestBenchMark2(t *testing.T)  {
 		"dsf":map[string]interface{}{
 			"name":"lixiang",
 			"age":1,
-			"desc":"",
 
 		},
+		"data":map[string]interface{}{
+			"audio_src":"s3",
+			"s3_access":"34",
+			"s3_endpoint":"34",
+			"s3_key":"34",
+			"s3_bucket":"",
+		},
+
+
 	}
 
 	vm:=NewVm()
-	vm.Set("param",param)
+	vm.Set("$",param)
+	SetInlineFunc("validate", func(i ...interface{}) interface{} {
+		if len(i)>1{
+			if m,ok:=i[0].(map[string]interface{});ok{
+				if _,ok:=m[String(i[1])];ok{
+					return &ErrorExit{Code:10106,Message:fmt.Sprintf("parma %v is required",String(i[1]))}
+				}
+			}
+		}
+		return nil
+	})
 
 	exp:=[]byte(`
-[{
-	"if":"and(eq(param.name,'lixiang'),gt(param.age,10))",
-	"then":["param.type='old'","param.desc1=sprintf('name=%v,age=%v',param.name,param.age)"],
-	"else":"param.desc1='a child'"
-},
-
-{
-	"if":"in(param.name,'lixiang','zhaobiao')",
-	"then":"printf('%v','yes niubi')"
-}
-]
+[
+         
+          {
+            "if": "eq($.data.audio_src,'s3')",
+            "then": [
+              "validate($.data,'s3_access')",
+              "validate($.data,'s3_endpoint')",
+              "validate($.data,'s3_key')",
+              "validate($.data,'s3_bucket')"
+            ]
+          }
+        ]
 
 `)
 	cmd,err:= CompileExpFromJson(exp)
 	if err !=nil{
 		panic(err)
 	}
-	for i:=0;i<1;i++{
-		vm.Execute(cmd)
+	for i:=0;i<100000;i++{
+		err = vm.Execute(cmd)
 	}
-	fmt.Println(vm.Get("param.desc"))
+	if err,ok:=IsExitError(err);ok{
+		fmt.Println("err->",err)
+	}
+	fmt.Println(vm.Get("param.desc"),err)
 }
 
 func TestMarshal(t *testing.T) {
@@ -301,4 +324,62 @@ func sums(n int,t *[][]int){
 			}
 		}
 	}
+}
+
+func TestJson(t *testing.T){
+	f,_:=ioutil.ReadFile(`C:\Users\admin\Documents\WeChat Files\lsj1581503100\FileStorage\File\2019-09\aa.txt`)
+	var a map[string]interface{}
+
+	json.Unmarshal(f,&a)
+	vm:=NewVm()
+	vm.Set("$",a["data"])
+	vm.ExecJson([]byte(`
+[
+		  "data=from_json($.result.lattice)",
+          {
+            "if": "isnil(data)",
+            "then":[
+					"data=$.result.lattice",
+
+					"print('==')"
+				]
+          },
+          "$.result.lattice=data",
+]
+
+`))
+	fmt.Println(vm.Get("$"))
+	_,err:=json.Marshal(vm.Get("$"))
+	fmt.Println(err)
+	fmt.Println()
+
+}
+
+
+func TestTryCatchExpt_Exec(t *testing.T) {
+	vm:=NewVm()
+	err:=vm.ExecJson([]byte(`
+{
+  "try": [
+    "f=open_file('exp.json')",
+    {
+      "func": "range(data,last)",
+      "do": [
+        "print(base64encode(data),last)"
+      ]
+    },
+    "range_reader(f,10,range)"
+  ],
+  "ecp": "e",
+  "do": "print('exception occur ',e)"
+}
+
+
+
+`))
+
+
+if err !=nil{
+	panic(err)
+}
 }
