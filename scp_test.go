@@ -359,20 +359,13 @@ func TestJson(t *testing.T){
 func TestTryCatchExpt_Exec(t *testing.T) {
 	vm:=NewVm()
 	err:=vm.ExecJson([]byte(`
-{
-  "try": [
-    "f=open_file('exp.json')",
-    {
-      "func": "range(data,last)",
-      "do": [
-        "print(base64encode(data),last)"
-      ]
-    },
-    "range_reader(f,10,range)"
-  ],
-  "ecp": "e",
-  "do": "print('exception occur ',e)"
-}
+
+  
+ [ {
+		"if":"1==1",
+		"then":"print('ok,thats')"
+	}
+]
 
 
 

@@ -80,6 +80,8 @@ func (v *RootValue)GetName()string  {
 }
 
 var funv = regexp.MustCompile(`(\w+)\((.+)*\)$`)
+
+var eqexp =regexp.MustCompile(`(.+)==(.+)`)
 func parseValue(s string) (Value,error) {
 	s = strings.Trim(s," ")
 	//if !isLegalBlock(s){
@@ -176,6 +178,14 @@ func parseValue(s string) (Value,error) {
 		}
 	}
 
+	if eqexp.MatchString(s){
+		v,err :=parseEqexp(s)
+		if err !=nil{
+			return nil,err
+		}
+		return v,nil
+	}
+
 	if !checkRule(s){
 		return nil,errors.New("invalid variable key:"+s)
 	}
@@ -239,3 +249,20 @@ func trimBlock (s string,i int)string{
 
 
 
+func parseEqexp(s string)(Value,error){
+	r:=strings.SplitN(s,"==",2)
+	v1,err:=parseValue(r[0])
+	if err != nil{
+		return nil,err
+	}
+
+	v2,err:=parseValue(r[1])
+	if err != nil{
+		return nil,err
+	}
+
+	return &FuncValue{
+		FuncName: "eq",
+		Params:   []Value{v1,v2},
+	},nil
+}

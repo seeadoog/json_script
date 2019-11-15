@@ -397,3 +397,15 @@ func parseFunc(s string,body interface{})(Exp,error){
 	return nil, nil
 }
 
+type Script struct {
+	Exp
+}
+
+func (s *Script)UnmarshalJSON(data []byte)error{
+	exp,err:=CompileExpFromJson(data)
+	if err != nil{
+		return err
+	}
+	s.Exp = exp
+	return nil
+}

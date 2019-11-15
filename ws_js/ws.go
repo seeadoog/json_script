@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 )
+
 func init(){
 	jsonscpt.SetInlineFunc("websocket_open", websocket_open)
 	jsonscpt.SetInlineFunc("websocket_write", websocket_write)
@@ -17,6 +18,7 @@ func init(){
 	jsonscpt.SetInlineFunc("sleep", sleep)
 	jsonscpt.SetInlineFunc("boce_info", boce_info)
 }
+
 func newWebsocket(url string,onOpen,onMessage,onClose jsonscpt.Func)*websocket.Conn{
 	d:=websocket.Dialer{}
 	con,rsp,err:=d.Dial(url,nil)
@@ -72,7 +74,6 @@ func websocket_close(i ...interface{})interface{}{
 		panic("websocket_write args <1")
 	}
 	i[0].(*websocket.Conn).Close()
-
 	return nil
 }
 func readResp(resp *http.Response) string {

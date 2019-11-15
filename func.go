@@ -380,7 +380,10 @@ var fromJson Func  = func(i ...interface{}) interface{} {
 	if len(i)>0{
 		var r interface{}
 		str:=String(i[0])
-		json.Unmarshal(*(*[]byte)(unsafe.Pointer(&str)),&r)
+		err:=json.Unmarshal(*(*[]byte)(unsafe.Pointer(&str)),&r)
+		if err !=nil{
+			return nil
+		}
 		return r
 	}
 	return nil
