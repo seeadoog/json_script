@@ -1,14 +1,16 @@
-{
-  "try": [
-    "f=open_file('exp.json')",
-    {
-      "func": "range(data,last)",
-      "do": [
-        "print(data,last)"
-      ]
-    },
-    "range_reader(f,range,10)"
-  ],
-  "ecp": "e",
-  "do": "print(e)"
-}
+[
+  {
+    "if": "$.business.personalization_multiple",
+    "then": [
+      "res=''",
+      {
+        "for": "k,v in $.business.personalization_multiple",
+        "do": [
+          "print(k,v)",
+          "res=append(res,k,'=',v,';')"
+        ]
+      },
+      "print(res)"
+    ]
+  }
+]

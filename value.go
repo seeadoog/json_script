@@ -31,7 +31,11 @@ type VarValue struct {
 func (v *VarValue) Get(ctx *Context) interface{} {
 	o, err := CachedJsonpathLookUp(ctx.table, v.Key)
 	if  err !=nil{
-		return  ctx.funcs[v.Key]
+		if f,ok:=ctx.funcs[v.Key];ok{
+			return f
+		}
+		return nil
+		//return ctx.funcs[v.Key]
 	}
 	return o
 }

@@ -104,6 +104,9 @@ type SetExps struct{
 func (e *SetExps)Exec(ctx *Context)error{
 	v:=e.Value.Get(ctx)
 	if err,ok:= IsExitErrorI(v);ok{
+		if err ==nil{
+			return  nil
+		}
 		return err
 	}
 	return MarshalInterface(e.Variable,ctx.table,v)
@@ -132,6 +135,9 @@ func Bool(v interface{})bool  {
 		return len(v.(string))>0
 	case float64:
 		return int(v.(float64))>0
+	}
+	if v != nil{
+		return true
 	}
 	return false
 }

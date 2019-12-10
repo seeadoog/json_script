@@ -3,26 +3,25 @@ package jsonscpt
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"testing"
 )
 
 func TestCachedJsonpathLookUp(t *testing.T) {
 	var m = map[string]interface{}{
-		"name":"lxiang",
-		"son":map[string]interface{}{
-			"name":"bs",
+		"name": "lxiang",
+		"son": map[string]interface{}{
+			"name": "bs",
 		},
 	}
-	MarshalInterface("lock.name",m,"hee")
-	fmt.Println(CachedJsonpathLookUp(m,"son.name"))
-	fmt.Println(CachedJsonpathLookUp(m,"lock.name"))
+	MarshalInterface("lock.name", m, "hee")
+	fmt.Println(CachedJsonpathLookUp(m, "son.name"))
+	fmt.Println(CachedJsonpathLookUp(m, "lock.name"))
 
 }
 
-func TestReg(t *testing.T)  {
+func TestReg(t *testing.T) {
 	fmt.Println(funv.MatchString("len(s,b,c)"))
-	r:=funv.FindAllSubmatch([]byte("len(s,b,c)"),-1)
+	r := funv.FindAllSubmatch([]byte("len(s,b,c)"), -1)
 	fmt.Println(string(r[0][1]))
 	fmt.Println(string(r[0][2]))
 	//for _, v := range r {
@@ -33,25 +32,25 @@ func TestReg(t *testing.T)  {
 	//}
 }
 
-func TestReg2(t *testing.T)  {
-	v,err:=parseValue("append('hello ','world',6,len('mask'),name,' ',common.ent)")
-	if err !=nil{
+func TestReg2(t *testing.T) {
+	v, err := parseValue("append('hello ','world',6,len('mask'),name,' ',common.ent)")
+	if err != nil {
 		panic(err)
 	}
-	set,err:=parseSetExp("common.ent=append('sms16k_en','_',rate)")
-	if err !=nil{
+	set, err := parseSetExp("common.ent=append('sms16k_en','_',rate)")
+	if err != nil {
 		panic(err)
 	}
 
-	set2,err:=parseSetExp("common.names=split(common.ent,'_',2)")
-	if err !=nil{
+	set2, err := parseSetExp("common.names=split(common.ent,'_',2)")
+	if err != nil {
 		panic(err)
 	}
-	vm:=NewVm()
-	vm.Set("len",lens)
-	vm.Set("append",apd)
-	vm.Set("name"," zhaobiao")
-	vm.Set("rate","16000")
+	vm := NewVm()
+	vm.Set("len", lens)
+	vm.Set("append", apd)
+	vm.Set("name", " zhaobiao")
+	vm.Set("rate", "16000")
 	set.Exec(vm)
 	set2.Exec(vm)
 	fmt.Println(v.Get(vm))
@@ -67,7 +66,7 @@ func TestReg2(t *testing.T)  {
 	//}
 }
 
-func TestParse(t*testing.T){
+func TestParse(t *testing.T) {
 	var s = `
 {
   "if":"a > b",
@@ -80,12 +79,12 @@ func TestParse(t*testing.T){
   }]
 }
 `
-var m = map[string]interface{}{}
-json.Unmarshal([]byte(s),&m)
-//p,_:= CompileExpFromJsonObject(m)
-//fmt.Println(p.(*IfExp).Else[0].(*SetExps).Variable)
-//fmt.Println(p.(*IfExp).Else[1].(*SetExps).Variable)
-//fmt.Println(p.(*IfExp).Else[2].(*IfExp).Then[0].(*SetExps).Variable)
+	var m = map[string]interface{}{}
+	json.Unmarshal([]byte(s), &m)
+	//p,_:= CompileExpFromJsonObject(m)
+	//fmt.Println(p.(*IfExp).Else[0].(*SetExps).Variable)
+	//fmt.Println(p.(*IfExp).Else[1].(*SetExps).Variable)
+	//fmt.Println(p.(*IfExp).Else[2].(*IfExp).Then[0].(*SetExps).Variable)
 }
 
 func TestCompile(t *testing.T) {
@@ -101,8 +100,8 @@ func TestCompile(t *testing.T) {
   }]
 }
 `
-fmt.Println(s)
-var s2 = `[
+	fmt.Println(s)
+	var s2 = `[
 {
 	"if":"business.rate==16000",
 	"then":["business.rate='16k'","business.name='lixiang'"]
@@ -110,33 +109,33 @@ var s2 = `[
 "business.finalEnt=append(business.ent,'_',business.rate)"
 ]`
 	var m interface{}
-	json.Unmarshal([]byte(s2),&m)
-	_,err:= CompileExpFromJsonObject(m)
-	if err !=nil{
+	json.Unmarshal([]byte(s2), &m)
+	_, err := CompileExpFromJsonObject(m)
+	if err != nil {
 		panic(err)
 	}
-	busi:=map[string]interface{}{
-		"ent":"sms",
-		"rate":16000,
+	busi := map[string]interface{}{
+		"ent":  "sms",
+		"rate": 16000,
 	}
-	for i:=0;i<10000;i++{
-		vm:=NewVm()
-		vm.Set("business",busi)
+	for i := 0; i < 10000; i++ {
+		vm := NewVm()
+		vm.Set("business", busi)
 		CompileExpFromJsonObject(m)
 	}
 
 	fmt.Println(busi)
-	for i:=0;i<1;i++{
-		v2:=NewVm()
-		err=v2.ExecJsonObject(`name""=5`)
-		fmt.Println("name=",err,v2.Get("name"))
+	for i := 0; i < 1; i++ {
+		v2 := NewVm()
+		err = v2.ExecJsonObject(`name""=5`)
+		fmt.Println("name=", err, v2.Get("name"))
 	}
 
 	//fmt.Println(vm.Get("common"))
 }
 
 func TestExec(t *testing.T) {
-	vm:=NewVm()
+	vm := NewVm()
 	//vm.ExecJsonObject(`printf('%f %f %f %s',1,2,3,append(len(append('hello','world')),'nima'))`)
 	vm.ExecJsonObject(`user.name='lixiang'`)
 	vm.ExecJsonObject(`user.password='123456'`)
@@ -167,68 +166,60 @@ func TestExec(t *testing.T) {
 
 //== >= <= | && | ||缺少
 
-
-
-
-
-
-func TestBenchMark(t *testing.T)  {
+func TestBenchMark(t *testing.T) {
 
 	var param = map[string]interface{}{
-		"name":"lixiang",
-		"age":15,
-		"desc":"",
+		"name": "lixiang",
+		"age":  15,
+		"desc": "",
 	}
 
-	for i:=0;i<1;i++{
-		if param["name"].(string)=="lixiang" && param["age"].(int)>10{
+	for i := 0; i < 1; i++ {
+		if param["name"].(string) == "lixiang" && param["age"].(int) > 10 {
 			param["type"] = "old"
-			param["desc1"] = fmt.Sprintf("name=%v,age=%v",param["name"],param["age"])
-		}else{
+			param["desc1"] = fmt.Sprintf("name=%v,age=%v", param["name"], param["age"])
+		} else {
 			param["desc1"] = "a child"
 		}
 
-		param["desc"] = param["desc"].(string)+"js"
+		param["desc"] = param["desc"].(string) + "js"
 	}
 	fmt.Println(param["desc"])
 }
 
-func TestBenchMark2(t *testing.T)  {
+func TestBenchMark2(t *testing.T) {
 
 	var param = map[string]interface{}{
-		"name":"lixiang",
-		"age":1,
-		"desc":"",
-		"dsf":map[string]interface{}{
-			"name":"lixiang",
-			"age":1,
-
+		"name": "lixiang",
+		"age":  1,
+		"desc": "",
+		"dsf": map[string]interface{}{
+			"name": "lixiang",
+			"age":  1,
 		},
-		"data":map[string]interface{}{
-			"audio_src":"s3",
-			"s3_access":"34",
-			"s3_endpoint":"34",
-			"s3_key":"34",
-			"s3_bucket":"",
+		"data": map[string]interface{}{
+			"audio_src":   "s3",
+			"s3_access":   "34",
+			"s3_endpoint": "34",
+			"s3_key":      "34",
+			"s3_bucket":   "",
 		},
-
-
 	}
 
-	vm:=NewVm()
-	vm.Set("$",param)
+	vm := NewVm()
+	vm.Set("$", param)
 	SetInlineFunc("validate", func(i ...interface{}) interface{} {
-		if len(i)>1{
-			if m,ok:=i[0].(map[string]interface{});ok{
-				if _,ok:=m[String(i[1])];ok{
-					return &ErrorExit{Code:10106,Message:fmt.Sprintf("parma %v is required",String(i[1]))}
+		if len(i) > 1 {
+			if m, ok := i[0].(map[string]interface{}); ok {
+				if _, ok := m[String(i[1])]; ok {
+					return &ErrorExit{Code: 10106, Message: fmt.Sprintf("parma %v is required", String(i[1]))}
 				}
 			}
 		}
 		return nil
 	})
 
-	exp:=[]byte(`
+	exp := []byte(`
 [
          
           {
@@ -243,136 +234,199 @@ func TestBenchMark2(t *testing.T)  {
         ]
 
 `)
-	cmd,err:= CompileExpFromJson(exp)
-	if err !=nil{
+	cmd, err := CompileExpFromJson(exp)
+	if err != nil {
 		panic(err)
 	}
-	for i:=0;i<100000;i++{
+	for i := 0; i < 100000; i++ {
 		err = vm.Execute(cmd)
 	}
-	if err,ok:=IsExitError(err);ok{
-		fmt.Println("err->",err)
+	if err, ok := IsExitError(err); ok {
+		fmt.Println("err->", err)
 	}
-	fmt.Println(vm.Get("param.desc"),err)
+	fmt.Println(vm.Get("param.desc"), err)
 }
 
 func TestMarshal(t *testing.T) {
 	var param = map[string]interface{}{
-		"name":"lixiang",
-		"age":1,
-		"desc":"",
-		"dsf":map[string]interface{}{
-			"name":"lixiang",
-			"age":1,
-			"desc":"",
+		"name": "lixiang",
+		"age":  1,
+		"desc": "",
+		"dsf": map[string]interface{}{
+			"name": "lixiang",
+			"age":  1,
+			"desc": "",
 		},
 	}
 
-	for i:=0;i<100000;i++{
+	for i := 0; i < 100000; i++ {
 		json.Marshal(param)
 	}
 }
 
-func TestMap(t *testing.T){
+func TestMap(t *testing.T) {
 	var s = []string{}
 	for k, _ := range systemId {
-		s =append(s,k)
+		s = append(s, k)
 	}
-	for i:=0;i<10000000;i++{
-		if isSystemId("in"){
+	for i := 0; i < 10000000; i++ {
+		if isSystemId("in") {
 
 		}
 	}
 }
 
-func TestMap2(t *testing.T){
-	a:=[][]int{}
-	sums(10,&a)
+func TestMap2(t *testing.T) {
+	a := [][]int{}
+	sums(10, &a)
 	fmt.Println(a)
 }
+
 //6
 //1+5 2+4 3+3
 //
-func isContains(ss []string,s string)bool{
+func isContains(ss []string, s string) bool {
 
-	for i:=0;i< len(ss);i++{
-		if ss[i] == s{
+	for i := 0; i < len(ss); i++ {
+		if ss[i] == s {
 			return true
 		}
 	}
 	return false
 }
 
-func sums(n int,t *[][]int){
-	sb:=[]int{}
-	for i:=1;i<=n/2;i++{
-		sb= append(sb,i,n-i)
-		*t=append(*t,sb)
+func sums(n int, t *[][]int) {
+	sb := []int{}
+	for i := 1; i <= n/2; i++ {
+		sb = append(sb, i, n-i)
+		*t = append(*t, sb)
 		sb = sb[:0]
-		if i>1 {
-			r:=&[][]int{}
-			sums(i,r)
+		if i > 1 {
+			r := &[][]int{}
+			sums(i, r)
 			for _, v := range *r {
-				*t = append(*t,append(v,n-i))
+				*t = append(*t, append(v, n-i))
 			}
 		}
-		if n-i>1 {
-			r:=&[][]int{}
-			sums(n-i,r)
+		if n-i > 1 {
+			r := &[][]int{}
+			sums(n-i, r)
 			for _, v := range *r {
-				*t = append(*t,append(v,i))
+				*t = append(*t, append(v, i))
 			}
 		}
 	}
 }
 
-func TestJson(t *testing.T){
-	f,_:=ioutil.ReadFile(`C:\Users\admin\Documents\WeChat Files\lsj1581503100\FileStorage\File\2019-09\aa.txt`)
-	var a map[string]interface{}
+func TestJson(t *testing.T) {
+	//f, _ := ioutil.ReadFile(`C:\Users\admin\Documents\WeChat Files\lsj1581503100\FileStorage\File\2019-09\aa.txt`)
+	var a  = map[string]interface{}{
+		"business":map[string]interface{}{
+			"personalization_multiple":map[string]interface{}{
+				"key1":"v1",
+				"key2":"v1",
+			},
+		},
+	}
 
-	json.Unmarshal(f,&a)
-	vm:=NewVm()
-	vm.Set("$",a["data"])
-	vm.ExecJson([]byte(`
+	vm := NewVm()
+	vm.Set("$", a)
+	err:=vm.ExecJson([]byte(`
 [
-		  "data=from_json($.result.lattice)",
-          {
-            "if": "isnil(data)",
-            "then":[
-					"data=$.result.lattice",
-
-					"print('==')"
-				]
-          },
-          "$.result.lattice=data",
+  {
+    "if": "not(isnil($.business.personalization_multiple))",
+    "then": [
+      "res=''",
+      {
+        "for": "k,v in $.business.personalization_multiple",
+        "do": ["print(k,v)","res=append(res,k,'=',v,';')"]
+      },
+      "print('then',res)"
+    ]
+  },
+  {
+	"if":"isnil($.abg)",
+	"then":"print('abg is nil')"
+  },
+	{
+	"if":"$.business1",
+	"then":"print('yes')"
+}
 ]
 
 `))
-	fmt.Println(vm.Get("$"))
-	_,err:=json.Marshal(vm.Get("$"))
 	fmt.Println(err)
-	fmt.Println()
+	fmt.Println(vm.Get("$"))
+	b, _ := json.Marshal(vm.Get("$"))
+	fmt.Println(string(b))
 
 }
-
 
 func TestTryCatchExpt_Exec(t *testing.T) {
-	vm:=NewVm()
-	err:=vm.ExecJson([]byte(`
+	js := []byte(`
 
-  
- [ {
-		"if":"1==1",
-		"then":"print('ok,thats')"
+{
+  "common":{
+    "app_id":"123456"
+  },
+  "business":{
+    "ent":"intp65",
+    "vcn":"xiaoyan",
+    "volume":50,
+    "speed":50
+  },
+  "data":{
+    "status":2,
+    "text":"exSI6ICJlbiIsCgkgICAgInBvc2l0aW9uIjogImZhbHNlIgoJf..."
+  },
+  "input":[
+		[ {"name":"liix","status":2,"isok":true}]
+	]
+}
+
+`)
+
+	b, err := GenerateSchemaFromJson(js)
+	fmt.Println(err)
+	fmt.Println(string(b))
+
+}
+
+func gengrateSchema(o interface{}, t map[string]interface{}) {
+	switch o.(type) {
+	case map[string]interface{}:
+		t["type"] = "object"
+		p := map[string]interface{}{}
+		t["properties"] = p
+		for k, v := range o.(map[string]interface{}) {
+			p[k] = map[string]interface{}{}
+			gengrateSchema(v, p[k].(map[string]interface{}))
+		}
+	case string:
+		t["type"] = "string"
+	case float64,float32,int,int64,int32:
+		t["type"] = "number"
+	case []interface{}:
+		t["items"] = map[string]interface{}{}
+		t["type"] = "array"
+		is := o.([]interface{})
+		if len(is) > 0 {
+			gengrateSchema(is[0], t["items"].(map[string]interface{}))
+		}else{
+
+		}
+	case bool:
+		t["type"] = "boolean"
 	}
-]
-
-
-
-`))
-
-
-if err !=nil{
-	panic(err)
 }
+
+func GenerateSchemaFromJson(in []byte)([]byte,error){
+	var i interface{}
+	if err:=json.Unmarshal(in,&i);err != nil{
+		return nil,err
+	}
+	sc:=make(map[string]interface{})
+	gengrateSchema(i,sc)
+	return json.Marshal(sc)
 }
+

@@ -113,6 +113,7 @@ func NewVm() *Context {
 	//c.init()
 	return c
 }
+
 type ConcurrencyContext struct {
 	*Context
 	lock *sync.RWMutex
@@ -409,3 +410,13 @@ func (s *Script)UnmarshalJSON(data []byte)error{
 	s.Exp = exp
 	return nil
 }
+
+func (s *Script)Exec(ctx *Context)(error){
+	if s.Exp != nil{
+		return s.Exp.Exec(ctx)
+	}
+	return nil
+}
+
+
+
