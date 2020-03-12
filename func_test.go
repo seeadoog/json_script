@@ -6,24 +6,21 @@ import (
 )
 
 func Test_number(t *testing.T) {
-	type args struct {
-		i interface{}
-	}
-	tests := []struct {
-		name string
-		args args
-		want float64
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Number(tt.args.i); got != tt.want {
-				t.Errorf("Number() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	vm:=NewVm()
+	vm.ExecJson([]byte(`
+[{
+  "func": "pow(i)",
+  "do": [
+    "return(i*i)"
+  ]
 }
+,
+  "print(pow(5)+pow(5)-pow(2*2+4))"
+]`))
+
+}
+
+
 
 func TestConvertToString(t *testing.T) {
 	type args struct {

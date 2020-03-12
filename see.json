@@ -1,12 +1,83 @@
 {
-  "field":"",
-  "op":"script",
-  "script":[
-    {
-      "for":"i=0;lt(i,10);i=add(i,1)",
-      "script":[
-        ""
-      ]
+  "meta": {
+    "serviceId": "v2test",
+    "service": ["iat"],
+    "route": "/v2/iat",
+    "sub":"iat",
+    "call":"atmos-its",
+    "iat": {
+      "input": {
+        "iat_audio": "audio"
+      },
+      "accept": {
+        "iat_text": "text"
+      }
     }
-  ]
+  },
+  "schemainput": {
+    "properties": {
+      "header": {
+        "properties": {
+          "app_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "parameter": {
+        "properties": {
+          "iat": {
+            "properties": {
+              "ent": {
+                "type": "string"
+              },
+              "iat_text": {
+                "properties": {
+                  "encoding": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "payload": {
+        "properties": {
+          "iat_audio": {
+            "properties": {
+              "audio": {
+                "type": "string"
+              },
+              "encoding": {
+                "type": "string"
+              },
+              "sample_rate": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "status": {
+                "type": "number"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "type": "object"
+  }
+
 }

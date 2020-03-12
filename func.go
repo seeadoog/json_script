@@ -64,6 +64,16 @@ var add Func = func(i ...interface{}) interface{} {
 	return sum
 }
 
+var addp Func = func(i ...interface{}) interface{} {
+	if len(i) >0{
+		if _,ok:=i[0].(string);ok{
+			return apd(i...)
+		}
+	}
+
+	return add(i...)
+}
+
 var printf Func = func(i ...interface{}) interface{} {
 	if len(i)>0{
 		if format,ok:=i[0].(string);ok{
@@ -145,9 +155,16 @@ var eq Func = func(i ...interface{}) interface{} {
 	if len(i)<2{
 		return false
 	}
+	//fmt.Println(i)
 	return String(i[0])==String(i[1])
 }
 
+var neq Func = func(i ...interface{}) interface{} {
+	if len(i)<2{
+		return false
+	}
+	return String(i[0])!=String(i[1])
+}
 var not Func = func(i ...interface{}) interface{} {
 	if len(i)<1{
 		return false
@@ -315,10 +332,7 @@ var trim Func = func(i ...interface{}) interface{} {
 		if Number(i[2])>=0{
 			return strings.TrimSuffix(String(i[0]), String(i[1]))
 		}
-
-		if Number(i[2])<0{
-			return strings.TrimPrefix(String(i[0]), String(i[1]))
-		}
+		return strings.TrimPrefix(String(i[0]), String(i[1]))
 	}
 	if len(i)>=2{
 		return strings.TrimPrefix(String(i[0]), String(i[1]))
@@ -417,12 +431,32 @@ func sub(i ...interface{})interface{}{
 	return 0
 }
 
+func rem (i ...interface{})interface{}{
+	if len(i)>=2{
+		return int(Number(i[0])) % int(Number(i[1]))
+	}
+	panic("args of op rem at least has 2")
+	return 0
+}
+
 func intt(i ...interface{})interface{}{
 	if len(i)>=1{
 		return int(Number(i[0]))
 	}
 	panic("convert to int ,args at least has 1")
 	return 0
+}
+
+func orr(i ...interface{})interface{}{
+	for _, v := range i {
+		if Bool(v){
+			return v
+		}
+	}
+	if len(i) >0{
+		return i[len(i)-1]
+	}
+	return false
 }
 func String(v interface{}) string {
 	switch v.(type) {
@@ -431,10 +465,25 @@ func String(v interface{}) string {
 	case bool:return strconv.FormatBool(v.(bool))
 	case nil:return ""
 	case int: return strconv.Itoa(v.(int))
-
+	case []byte:
+		return string(v.([]byte))
 	default:
 		return fmt.Sprintf("%v",v)
 	}
+}
+func Bool(v interface{})bool  {
+	switch v.(type) {
+	case bool:
+		return v.(bool)
+	case string:
+		return len(v.(string))>0
+	case float64:
+		return int(v.(float64))>0
+	}
+	if v != nil{
+		return true
+	}
+	return false
 }
 
 func throw(i ...interface{})interface{}{

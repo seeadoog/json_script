@@ -13,6 +13,7 @@ type Value interface {
 	Get(ctx *Context) interface{}
 	GetName()string
 }
+// a=5 ,b='124',c=true
 type ConstValue struct {
 	v interface{}
 }
@@ -24,6 +25,7 @@ func (v *ConstValue)GetName()string  {
 	return ""
 }
 //this is variable ,the value from context
+// ent = o.ent
 type VarValue struct {
 	Key string
 }
@@ -45,6 +47,7 @@ func (v *VarValue)GetName()string  {
 }
 
 // value of function
+// a = add(1,3)
 type FuncValue struct {
 	FuncName string  // func name
 	Params   []Value //Params
@@ -67,21 +70,12 @@ func (v *FuncValue) Get(ctx *Context) interface{} {
 	panic("func:"+v.FuncName+" does not exists")
 	return nil
 }
+
 func (v *FuncValue)GetName()string  {
 	return v.FuncName
 }
 
-type RootValue struct {
 
-}
-
-func (v *RootValue) Get(ctx *Context) interface{} {
-
-	return ctx.table
-}
-func (v *RootValue)GetName()string  {
-	return "$root"
-}
 
 var funv = regexp.MustCompile(`(\w+)\((.+)*\)$`)
 
@@ -91,7 +85,7 @@ func parseValue(s string) (Value,error) {
 	//if !isLegalBlock(s){
 	//	return nil,errors.New("illegal block exp:"+s)
 	//}
-	s= TrimBlock(s)
+	//s= TrimBlock(s)
 	if strings.HasPrefix(s, "'") && strings.HasSuffix(s, "'") {
 	 	v:=&ConstValue{
 	 		v:strings.Trim(s,"'"),

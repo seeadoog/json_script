@@ -3,6 +3,7 @@ package jsonscpt
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -326,15 +327,20 @@ func TestJson(t *testing.T) {
 				"key1":"v1",
 				"key2":"v1",
 			},
+			"ent":"sms",
+			"app_id":"123",
 		},
+		"a":4,
+		"b":5,
 	}
 
 	vm := NewVm()
 	vm.Set("$", a)
 	err:=vm.ExecJson([]byte(`
 [
+  "print($.business.personalization_multiple.key1)",
   {
-    "if": "not(isnil($.business.personalization_multiple))",
+    "if": "$.business.personalization_multiple",
     "then": [
       "res=''",
       {
@@ -343,15 +349,17 @@ func TestJson(t *testing.T) {
       },
       "print('then',res)"
     ]
+	
   },
+	"$.business.per=res",
   {
-	"if":"isnil($.abg)",
+	"if":"$.business.ent=='sms' && $.business.app_id=='123' && !$.asn && (($.a+$.b)==19 || 3==3) && ('123'+'456'=='123456')",
 	"then":"print('abg is nil')"
   },
 	{
-	"if":"$.business1",
-	"then":"print('yes')"
-}
+	"if":"!in($.business.ent,'123456','567')",
+	"then":"print('yesok')"
+	}
 ]
 
 `))
@@ -362,6 +370,40 @@ func TestJson(t *testing.T) {
 
 }
 
+
+func TestLk(t *testing.T){
+	exp,err:=parseBoolExpFromAstString("get(1).asdt")
+	if err!=nil{
+		panic(err)
+	}
+	vm:=NewVm()
+	vm.Set("a",4)
+	vm.Set("b",4)
+	fmt.Println(exp.Get(vm))
+	for i:= 0;i <1;i++{
+		exp.Get(vm)
+	}
+	fmt.Println(exp.Get(vm))
+}
+
+
+
+func TestLk2(t *testing.T){
+
+
+	vm:=NewVm()
+	vm.Set("appid","1239845")
+	for i:= 0;i <100000;i++{
+		m:=make(map[string]interface{})
+		m["appid"] = "1239845"
+		for _,v:=range strings.Split("123456,345678,908745,1239845,3,4,5,889,77",","){
+			if v==m["appid"]{
+				m["appid"] = "123"
+			}
+		}
+	}
+	fmt.Println(vm.Get("jkl"))
+}
 func TestTryCatchExpt_Exec(t *testing.T) {
 	js := []byte(`
 
@@ -430,3 +472,54 @@ func GenerateSchemaFromJson(in []byte)([]byte,error){
 	return json.Marshal(sc)
 }
 
+
+
+func TestParse2r(t *testing.T){
+	//exp:="a >=b && c == d && f.a==5 && eq(f.b[0],'yes') && $.ent=='sms16k' "
+	exp:="$.ent=$.mks || 'sms16k5'"
+
+	e,err:=parseSetExp2(exp)
+	if err != nil{
+		panic(err)
+	}
+	ctx:=NewVm()
+	ctx.Set("a",5)
+	ctx.Set("b",5)
+	ctx.Set("c","hello")
+	ctx.Set("d","hello")
+	ctx.Set("e",true)
+	ctx.Set("$",map[string]interface{}{
+		"ent":"sms16k",
+		"mks":123,
+	})
+	ctx.Set("f",map[string]interface{}{
+		"a":5,
+		"b":[]string{"yes"},
+	})
+	fmt.Println(e.Exec(ctx))
+	fmt.Println(ctx.Get("f.b[0]"))
+	fmt.Println(ctx.Get("$.ent"))
+}
+
+var template = `
+[{
+            "if": "len(o) != 3",
+            "then": "return('length of '+path+' must be 3')"
+},
+{
+	"for":"k,v in split('1,2,3,4,5',',')",
+	"do":{
+		"if":"v == 3",
+		"then":"break",
+		"else":"print(v)"
+	}
+}
+]
+`
+
+func TestTls(t *testing.T){
+	vm:=NewVm()
+	vm.Set("o","12l")
+	vm.Set("part",[]interface{}{1,2,3,45,5})
+	fmt.Println(vm.ExecJson([]byte(template)))
+}

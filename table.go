@@ -1,9 +1,7 @@
 package jsonscpt
 
 import (
-	"go/parser"
 	"strconv"
-	"fmt"
 	"strings"
 )
 
@@ -56,7 +54,7 @@ func (f *JFloat)String()string{
 }
 
 func(f *JFloat)Bool()bool{
-	if int(*f)>0{
+	if *f>0{
 		return true
 	}
 	return false
@@ -72,19 +70,19 @@ func(f *JFloat)Float()float64{
 
 type JFunc func(... JValue)JValue
 
-func (s  *JFunc)String()string{
-	return fmt.Sprintf("%v",*s)
+func (s  JFunc)String()string{
+	return ""
 }
 
-func (s  *JFunc)Float()float64{
+func (s  JFunc)Float()float64{
 	return 0
 }
 
-func (s *JFunc)Bool()bool{
+func (s JFunc)Bool()bool{
 	return false
 }
 
-func (s *JFunc)Int()int{
+func (s JFunc)Int()int{
 	return 0
 }
 
@@ -101,12 +99,33 @@ type JMap map[string]JValue
 func (m JMap)Set(k string,v JValue){
 	m[k] = v
 }
-
+func (m JMap)Get(k string)JValue{
+	return m[k]
+}
 func (m JMap)ExecFunc(name string,values ...JValue)JValue{
-	if fun,ok:=m[name].(*JFunc);ok{
-		return (*fun)(values...)
+	if fun,ok:=m[name].(JFunc);ok{
+		return (fun)(values...)
 	}
 	return nil
+}
+
+func (m JMap)String()string{
+	return ""
+}
+
+func (m JMap)Int()int{
+	panic("cannot use map as int value")
+}
+
+func (m JMap)Float()float64{
+	panic("cannot use map as float value")
+}
+
+func (m JMap)Bool()bool{
+	if m ==nil{
+		return true
+	}
+	return false
 }
 
 // ValueAbstract
@@ -214,5 +233,14 @@ func Contains(tokens []string,s string)(string,bool){
 }
 
 func parseTokens(s string,tokenSet []string){
-	parser.ParseExpr("a==b && c==d && name(e,f,g)")
+
 }
+
+
+
+
+type TableValue struct {
+	Table JMap
+	Key string
+}
+

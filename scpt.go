@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io/ioutil"
+	"reflect"
 	"regexp"
 	"strings"
 	"sync"
@@ -83,6 +87,10 @@ var (
 		"int":intt,
 		"sub":sub,
 		"throw":throw,
+		"neq":neq,
+		"addp":addp,
+		"rem":rem,
+		"orr":orr,
 	}
 )
 //可以用于初始化vm，减少vm创建开销。初始化执行
@@ -219,7 +227,7 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 			return &BreakExp{},nil
 		}
 
-		e,err:=parseSetExp(exp)
+		e,err:=parseSetExp2(exp)
 		if err !=nil{
 			return nil, err
 		}
@@ -418,5 +426,178 @@ func (s *Script)Exec(ctx *Context)(error){
 	return nil
 }
 
+//use to replace key of $
+const ReplaceKeyDollor ="jsp_replace_key_dollor_675gb__"
+const ReplaceKeyReturn ="jsp_replace_key_return_675gb__"
+const ReplaceKeyBreak ="jsp_replace_key_break_675gb__"
+func preProcessExp(exp string)string{
+	exp = strings.Replace(exp,"'","\"",-1)
+	exp = strings.Replace(exp,"$",ReplaceKeyDollor,-1)
+	exp = strings.Replace(exp,"return",ReplaceKeyReturn,-1)
+	exp = strings.Replace(exp,"break",ReplaceKeyBreak,-1)
+	return exp
+}
+
+func resumeProcessExp(exp string)string{
+	exp = strings.Replace(exp,"\"","'",-1)
+	exp = strings.Replace(exp,ReplaceKeyDollor,"$",-1)
+	exp = strings.Replace(exp,ReplaceKeyReturn,"return",-1)
+	exp = strings.Replace(exp,ReplaceKeyBreak,"break",-1)
+	return exp
+}
+
+func ParseValue(exp string)(Value,error){
+	return parseBoolExpFromAstString(exp)
+}
+
+func parseBoolExpFromAstString(exp string)(Value,error){
+	exp = preProcessExp(exp)
+	expr,err:=parser.ParseExpr(exp)
+	if err != nil{
+		return nil,err
+	}
+	e,err:=parseBoolExp2(expr)
+	if err != nil{
+		return nil,fmt.Errorf("invalid exp,%s,err=%s",exp,err.Error())
+	}
+	return e,nil
+}
+
+func parseParamsFromAst(exp *ast.BinaryExpr)([]Value,error){
+	parms:=make([]Value,2)
+	x,err:=parseBoolExp2(exp.X)
+	if err != nil{
+		return nil,err
+	}
+	parms[0] = x
+	y,err:=parseBoolExp2(exp.Y)
+	if err != nil{
+		return nil,err
+	}
+	parms[1] = y
+	return parms, nil
+}
+
+func parseFuncByName(exp *ast.BinaryExpr,fun string)(Value,error){
+	v:= &FuncValue{
+		FuncName: fun,
+		Params:   nil,
+	}
+	ps,err:=parseParamsFromAst(exp)
+	if err != nil{
+		return nil, err
+	}
+	v.Params =ps
+	return v,nil
+}
+var m = []int{
+	1:1,
+	3:4,
+	10:10,
+}
+
+func parseBoolExp2(e ast.Expr)(Value,error){
+	if exp,ok:=e.(*ast.BinaryExpr);ok{
+		switch exp.Op {
+		case token.LAND: // &&
+			return parseFuncByName(exp,"and")
+		case token.EQL: // ==
+			return parseFuncByName(exp,"eq")
+		case token.GTR: // >
+			return parseFuncByName(exp,"gt")
+		case token.GEQ://>=
+			return parseFuncByName(exp,"ge")
+		case token.LEQ://<=
+			return parseFuncByName(exp,"le")
+		case token.LSS:// <
+			return parseFuncByName(exp,"lt")
+		case token.LOR: // ||
+			return parseFuncByName(exp,"orr")
+		case token.NEQ://!=
+			return parseFuncByName(exp,"neq")
+		case token.ADD://+
+			return parseFuncByName(exp,"addp")
+		case token.MUL://*
+			return parseFuncByName(exp,"mul")
+		case token.SUB://-
+			return parseFuncByName(exp,"sub")
+		case token.QUO:// /
+			return parseFuncByName(exp,"div")
+		case token.REM:// %
+			return parseFuncByName(exp,"rem")
 
 
+		}
+
+	}
+	//
+	if id,ok:=e.(*ast.Ident);ok{
+		//fmt.Println(id.Name)
+		return parseValue(resumeProcessExp(id.Name))
+		//return nil, nil
+	}
+
+	//fmt.Println(reflect.TypeOf(e).String())
+	if fun,ok:=e.(*ast.CallExpr);ok{
+		params:=make([]Value,0, len(fun.Args))
+		for _, v := range fun.Args {
+			vv,err:=parseBoolExp2(v)
+			if err != nil{
+				return nil,err
+			}
+			params  =  append(params,vv)
+		}
+		return &FuncValue{
+			FuncName: resumeProcessExp(fun.Fun.(*ast.Ident).Name),
+			Params:   params,
+		},nil
+	}
+	if bs,ok:=e.(*ast.BasicLit);ok{
+		return parseValue(strings.Replace(bs.Value,"\"","'",-1))
+	}
+	if p,ok:=e.(*ast.ParenExpr);ok{
+		if v,err:=parseBoolExp2(p.X);err ==nil{
+			return v,nil
+		}else{
+			return nil,err
+		}
+	}
+
+	if s,ok:=e.(*ast.SelectorExpr);ok{
+
+		//fmt.Println("str=",selectToString(s))
+		return &VarValue{Key:strings.Replace(selectToString(s),ReplaceKeyDollor,"$",-1)},nil
+	}
+	if idx,ok:=e.(*ast.IndexExpr);ok{
+		//fmt.Println("str=",selectToString(idx))
+		return &VarValue{Key:strings.Replace(selectToString(idx),ReplaceKeyDollor,"$",-1)},nil
+	}
+	if u,ok:=e.(*ast.UnaryExpr);ok{
+		if u.Op == token.NOT{
+			v,err:=parseBoolExp2(u.X)
+			if err != nil{
+				return nil,err
+			}
+			return &FuncValue{
+				FuncName: "not",
+				Params:   []Value{v},
+			},nil
+		}
+	}
+	return nil,fmt.Errorf("invalid exp,type=%s",reflect.TypeOf(e).String())
+}
+
+func selectToString(s ast.Expr)(string){
+	if sl,ok:=s.(*ast.SelectorExpr);ok{
+		return selectToString(sl.X)+"."+sl.Sel.Name
+	}
+	if id,ok:=s.(*ast.Ident);ok{
+		return id.Name
+	}
+
+	if idx,ok:=s.(*ast.IndexExpr);ok{
+		return fmt.Sprintf("%s[%s]",selectToString(idx.X),idx.Index.(*ast.BasicLit).Value)
+	}
+
+	return ""
+}

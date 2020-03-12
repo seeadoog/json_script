@@ -1,6 +1,13 @@
-[
-  {
-    "if": "in($.app_id,split('100IME,IFLYREC',','))",
-    "then": ["print('amd yes')"]
-  }
+[{
+  "func": "pow(i)",
+  "do": [
+    "return(i*i)"
+  ]
+}
+,
+  "print(pow(5))",
+  "c.response.write(o)",
+  "c.request.send('cmd')",
+  "c.request.send('ttp')",
+  "c.request.send('aus')"
 ]

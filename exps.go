@@ -2,6 +2,7 @@ package jsonscpt
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"unsafe"
@@ -15,6 +16,7 @@ type Exp interface  {
 func trimspace(s string)string  {
 	return strings.Trim(s," ")
 }
+
 func parseSetExp(s string)(Exp, error){
 	v,err:=splitSetExp(s)
 	if err !=nil{
@@ -95,6 +97,31 @@ func splitSetExp(s string)([]string,error)  {
 func toString(b []byte)string  {
 	return *(*string)(unsafe.Pointer(&b))
 }
+func ParseExp(s string)(Exp,error){
+	return parseSetExp2(s)
+}
+
+
+func parseSetExp2(s string)(Exp,error){
+	val,err:=parseBoolExpFromAstString(s)
+	if err ==nil{
+		return &FuncExp{Value:val},nil
+	}
+	// trim as assignment
+	kvs:=strings.SplitN(s,"=",2)
+	if len(kvs) !=2{
+		return nil,fmt.Errorf("parse Exp error:%s",s)
+	}
+	valName:=kvs[0]
+	val,err =parseBoolExpFromAstString(kvs[1])
+	if err != nil{
+		return nil,fmt.Errorf("cannot parse set exp,invalid func:%s",err.Error())
+	}
+	return &SetExps{
+		Variable: strings.Trim(valName," "),
+		Value:    val,
+	},nil
+}
 
 type SetExps struct{
 	Variable string
@@ -127,20 +154,6 @@ func (b *BoolValue)Match(ctx *Context)bool  {
 //}
 
 
-func Bool(v interface{})bool  {
-	switch v.(type) {
-	case bool:
-		return v.(bool)
-	case string:
-		return len(v.(string))>0
-	case float64:
-		return int(v.(float64))>0
-	}
-	if v != nil{
-		return true
-	}
-	return false
-}
 
 
 type IfExp struct {
@@ -349,7 +362,7 @@ func (b *ForRangeExp)Exec(ctx *Context)error  {
 
 //////
 func parseBoolExp( s string)(*BoolValue,error){
-	v,err:=parseValue(s)
+	v,err:=parseBoolExpFromAstString(s)
 	if err !=nil{
 		return nil,err
 	}

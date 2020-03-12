@@ -1,16 +1,25 @@
+
 [
   {
-    "if": "$.business.personalization_multiple",
+    "if": "$.result",
     "then": [
-      "res=''",
       {
-        "for": "k,v in $.business.personalization_multiple",
-        "do": [
-          "print(k,v)",
-          "res=append(res,k,'=',v,';')"
-        ]
+        "for": "i,ws in $.result.ws",
+        "do": "text=text+ws.w[0].w"
       },
-      "print(res)"
+      ""
     ]
+  },
+  {
+    "type": "string",
+    "custom": {
+      "func":"validate(path,o)",
+      "do": [
+        {
+          "if":"len(o)!=3",
+          "then": "return(sprintf('length of %s.ent must be 3',path))"
+        }
+      ]
+    }
   }
 ]
