@@ -122,6 +122,13 @@ func NewVm() *Context {
 	return c
 }
 
+func NewVmWithContext(i map[string]interface{})*Context{
+	return &Context{
+		table: i,
+		funcs: funcs,
+	}
+}
+
 type ConcurrencyContext struct {
 	*Context
 	lock *sync.RWMutex
@@ -347,6 +354,39 @@ func CompileExpFromJsonObject(v interface{}) (Exp,error) {
 				return nil, err
 			}
 			return &TryCatchExpt{Try:tryExp,Do:doExp,Execption:excp}, nil
+		}else if swh,ok:=m["switch"].(string);ok{
+			swv,err:=parseValue(swh)
+			if err != nil{
+				return nil, fmt.Errorf("parse switch exp error %w",err)
+			}
+			cases,ok:=m["cases"].(map[string]interface{})
+			if !ok{
+				return nil, fmt.Errorf("cases must be object in switch")
+			}
+			swhExp:=&Switch{
+				swh: swv,
+				cases: map[Value]Exp{},
+			}
+			for ca, expstr := range cases {
+				cv,err:=parseValue(ca)
+				if err != nil{
+					return nil, fmt.Errorf("parse cases error in switch,%w",err)
+				}
+				cexp,err:=CompileExpFromJsonObject(expstr)
+				if err != nil{
+					return nil, fmt.Errorf("parse cases exp error in switch:%w",err)
+				}
+				swhExp.cases[cv] = cexp
+			}
+			def:=m["default"]
+			if def != nil{
+				defexp,err:=CompileExpFromJsonObject(def)
+				if err != nil{
+					return nil, fmt.Errorf("parse default error in switch:%w", err)
+				}
+				swhExp.defaulte = defexp
+			}
+			return swhExp, nil
 		}
 
 		return nil,errors.New("invalid object:"+fmt.Sprintf("%v",v))
